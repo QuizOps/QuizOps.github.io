@@ -550,22 +550,68 @@ body {
   }
 
   /* ── Refinery tab ── */
-  #rf-content { flex-direction: column !important; }
+  .rf-content { flex-direction: column !important; }
   .rf-info-panel {
     width: 100% !important;
-    height: 40vh;
+    height: 45dvh;
     border-left: none !important;
-    border-top: 1px solid var(--border);
+    border-top: 2px solid #f0a500;
+    flex-shrink: 0;
+  }
+  /* rf-tabs scrollable */
+  #rf-tabs {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    max-width: calc(100vw - 120px);
+  }
+  #rf-tabs::-webkit-scrollbar { display: none; }
+  /* rf top bar wraps on mobile */
+  #refinery-overlay > div:first-child {
+    height: auto !important;
+    min-height: 44px;
+    padding: 8px 12px !important;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  /* SVG area takes remaining space */
+  #rf-svg-wrap {
+    min-height: 40dvh;
+    overflow: auto !important;
   }
 
   /* ── Platts periodic table ── */
   .platts-grid { font-size: 8px !important; }
 }
 
-/* ── Show bottom tab bar only on mobile ── */
+/* ── Mobile chart buttons ── */
+.mob-chart-btn {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 12px 8px;
+  font-size: 11px;
+  font-family: inherit;
+  letter-spacing: .05em;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: border-color .15s, color .15s;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.mob-chart-btn:active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Show bottom tab bar + mob charts only on mobile ── */
 #mob-tab-bar { display: none; }
+#mob-charts-overlay { display: none !important; }
 @media (max-width: 768px) {
   #mob-tab-bar { display: flex; }
+  #mob-charts-overlay { display: flex !important; }
+  #mob-charts-overlay.overlay-hidden { display: none !important; }
 }
 </style>
 </head>
@@ -2952,8 +2998,18 @@ function mobTab(view) {
   } else if(view === 'news') {
     showView('news');
   } else if(view === 'chart') {
-    // Show stocks chart as default
-    showChart('stocks');
+    // Show mobile charts overlay (TradingView + Medeco buttons)
+    const mco = document.getElementById('mob-charts-overlay');
+    if(mco) {
+      // Close other overlays first
+      document.getElementById('chart-overlay').classList.add('overlay-hidden');
+      document.getElementById('news-overlay').classList.add('overlay-hidden');
+      const aiOv = document.getElementById('ai-overlay');
+      if(aiOv) aiOv.classList.add('overlay-hidden');
+      const rfOv = document.getElementById('refinery-overlay');
+      if(rfOv) rfOv.classList.add('overlay-hidden');
+      mco.classList.remove('overlay-hidden');
+    }
   } else if(view === 'ai') {
     showView('ai');
   } else if(view === 'refinery') {
@@ -2995,6 +3051,27 @@ function _syncMobTab(v) {
   document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
   const key = Object.keys(map).find(k => v && v.startsWith(k)) || 'map';
   const btn = document.getElementById('mobt-' + map[key]);
+  if(btn) btn.classList.add('active');
+}
+
+
+// Mobile chart helpers
+function mobOpenChart(key) {
+  const mco = document.getElementById('mob-charts-overlay');
+  if(mco) mco.classList.add('overlay-hidden');
+  showChart(key);
+  // Keep CHARTS tab active so back works
+  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+  const btn = document.getElementById('mobt-chart');
+  if(btn) btn.classList.add('active');
+}
+function mobCloseCharts() {
+  const mco = document.getElementById('mob-charts-overlay');
+  if(mco) mco.classList.add('overlay-hidden');
+  // Go back to map
+  showView('map');
+  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+  const btn = document.getElementById('mobt-map');
   if(btn) btn.classList.add('active');
 }
 
@@ -4611,13 +4688,13 @@ if(window.innerWidth <= 768) {
   </div>
 
   <!-- BODY -->
-  <div style="flex:1;display:flex;overflow:hidden;min-height:0">
+  <div class="rf-content" style="flex:1;display:flex;overflow:hidden;min-height:0">
 
     <!-- SVG AREA — takes all remaining space, no padding, no max-width -->
     <div id="rf-svg-wrap" style="flex:1;overflow:hidden;background:#f7fafd;display:flex;align-items:stretch;justify-content:stretch;min-width:0"></div>
 
     <!-- INFO PANEL -->
-    <div style="width:380px;flex-shrink:0;border-left:1px solid #d6e4f0;background:#fff;display:flex;flex-direction:column;box-shadow:-6px 0 20px rgba(11,25,46,.07)">
+    <div class="rf-info-panel" style="width:380px;flex-shrink:0;border-left:1px solid #d6e4f0;background:#fff;display:flex;flex-direction:column;box-shadow:-6px 0 20px rgba(11,25,46,.07)">
       <div id="rf-empty" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;text-align:center">
         <svg width="72" height="72" viewBox="0 0 72 72" style="opacity:.1;margin-bottom:22px"><circle cx="36" cy="36" r="32" fill="none" stroke="#0b192e" stroke-width="3"/><circle cx="36" cy="36" r="18" fill="none" stroke="#0b192e" stroke-width="2"/><circle cx="36" cy="36" r="5" fill="#0b192e"/><line x1="36" y1="4" x2="36" y2="18" stroke="#0b192e" stroke-width="2"/><line x1="36" y1="54" x2="36" y2="68" stroke="#0b192e" stroke-width="2"/><line x1="4" y1="36" x2="18" y2="36" stroke="#0b192e" stroke-width="2"/><line x1="54" y1="36" x2="68" y2="36" stroke="#0b192e" stroke-width="2"/></svg>
         <div style="font-size:8px;color:#f0a500;letter-spacing:.22em;margin-bottom:14px;font-weight:700">INTERACTIVE DIAGRAM</div>
@@ -4664,6 +4741,61 @@ if(window.innerWidth <= 768) {
     <span class="mob-tab-icon">🏭</span>
     <span>RAFFINAGE</span>
   </button>
+</div>
+
+<!-- ═══ MOBILE CHARTS OVERLAY ════════════════════════════════════ -->
+<div id="mob-charts-overlay" class="overlay overlay-hidden" style="flex-direction:column;overflow:hidden;padding-bottom:56px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:46px;flex-shrink:0;border-bottom:1px solid var(--border)">
+    <span style="font-size:10px;letter-spacing:.18em;color:var(--accent)">📈 CHARTS</span>
+    <button onclick="mobCloseCharts()" style="background:none;border:1px solid var(--border);color:var(--dim);padding:4px 12px;font-size:9px;cursor:pointer;font-family:inherit;letter-spacing:.1em">✕ CLOSE</button>
+  </div>
+
+  <!-- TradingView mini charts -->
+  <div style="display:flex;flex-direction:column;gap:0;flex-shrink:0;border-bottom:1px solid var(--border)">
+    <div style="font-size:8px;letter-spacing:.15em;color:var(--dim);padding:8px 14px 4px;text-transform:uppercase">Market Prices</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--border)">
+      <!-- WTI -->
+      <div style="border-right:1px solid var(--border)">
+        <div style="font-size:8px;letter-spacing:.12em;color:var(--dim);padding:5px 10px;border-bottom:1px solid var(--border)">WTI CRUDE</div>
+        <div class="tradingview-widget-container" style="height:130px">
+          <div class="tradingview-widget-container__widget"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+          {"symbol":"TVC:USOIL","width":"100%","height":130,"locale":"en","dateRange":"3M","colorTheme":"dark","isTransparent":true,"autosize":false,"largeChartUrl":""}
+          </script>
+        </div>
+      </div>
+      <!-- BRENT -->
+      <div>
+        <div style="font-size:8px;letter-spacing:.12em;color:var(--dim);padding:5px 10px;border-bottom:1px solid var(--border)">BRENT CRUDE</div>
+        <div class="tradingview-widget-container" style="height:130px">
+          <div class="tradingview-widget-container__widget"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+          {"symbol":"TVC:UKOIL","width":"100%","height":130,"locale":"en","dateRange":"3M","colorTheme":"dark","isTransparent":true,"autosize":false,"largeChartUrl":""}
+          </script>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Medeco internal charts -->
+  <div style="flex:1;overflow-y:auto;padding:10px 14px;">
+    <div style="font-size:8px;letter-spacing:.15em;color:var(--dim);margin-bottom:10px;text-transform:uppercase">📡 Medeco — Internal Data</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <button class="mob-chart-btn" onclick="mobOpenChart('medeco-dubai')">🛢 Dubai</button>
+      <button class="mob-chart-btn" onclick="mobOpenChart('medeco-brent-dtd')">📊 Brent DTD</button>
+      <button class="mob-chart-btn" onclick="mobOpenChart('medeco-wti')">🇺🇸 WTI</button>
+      <button class="mob-chart-btn" onclick="mobOpenChart('medeco-murban')">🇦🇪 Murban</button>
+      <button class="mob-chart-btn" onclick="mobOpenChart('medeco-oman')">🇴🇲 Oman</button>
+      <button class="mob-chart-btn" onclick="mobOpenChart('medeco-brent-dub')">↔ B/D Spread</button>
+    </div>
+    <div style="font-size:8px;letter-spacing:.15em;color:var(--dim);margin-bottom:10px;text-transform:uppercase">📊 EIA — US Data</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="mob-chart-btn" onclick="mobOpenChart('stocks')">🛢 US Stocks</button>
+      <button class="mob-chart-btn" onclick="mobOpenChart('production')">⚙ US Production</button>
+      <button class="mob-chart-btn" onclick="mobOpenChart('imports')">🚢 US Imports</button>
+      <button class="mob-chart-btn" onclick="mobOpenChart('balance')">⚖ Global Balance</button>
+    </div>
+  </div>
 </div>
 </body>
 </html>
