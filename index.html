@@ -371,6 +371,196 @@ body {
 
 
 
+
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE  ≤ 768px
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── Hide desktop-only elements ── */
+  #ticker-bar,
+  .tradingview-widget-container,
+  #bottom-panel,
+  #medeco-pills-sep,
+  #medeco-pills-label,
+  #medeco-crude-pills,
+  #medeco-dist-pills,
+  #medeco-lng-pills,
+  #medeco-gas-pills,
+  #medeco-fuel-pills,
+  #medeco-status,
+  #clock,
+  .divider,
+  #mode-bar { display: none !important; }
+
+  /* ── Body: allow scroll on mobile ── */
+  body {
+    height: 100dvh;
+    overflow: hidden;
+    font-size: 13px;
+  }
+
+  /* ── Headline ticker — slimmer ── */
+  #headline-bar {
+    height: 22px;
+    font-size: 10px;
+  }
+
+  /* ── Header: compact, logo + pills only ── */
+  #header {
+    padding: 0 10px;
+    height: 44px;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-shrink: 0;
+  }
+  #header::-webkit-scrollbar { display: none; }
+
+  .logo { font-size: 14px; letter-spacing: .12em; flex-shrink: 0; }
+
+  /* Hide all nav pills — replaced by bottom tab bar */
+  .nav-pills { display: none !important; }
+
+  /* ── Main: full height, no side panel by default ── */
+  #main {
+    flex: 1;
+    overflow: hidden;
+    padding-bottom: 56px; /* room for bottom tab bar */
+  }
+
+  /* ── Map: full width ── */
+  #map-wrap {
+    width: 100% !important;
+    flex: 1;
+  }
+
+  /* ── Side panel: hidden, becomes bottom drawer ── */
+  #side-panel {
+    position: fixed !important;
+    bottom: 56px;
+    left: 0;
+    right: 0;
+    width: 100% !important;
+    height: 70dvh;
+    z-index: 3000;
+    border-left: none !important;
+    border-top: 2px solid var(--accent);
+    border-radius: 16px 16px 0 0;
+    transform: translateY(100%);
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+    overflow-y: auto;
+  }
+  #side-panel.mob-open {
+    transform: translateY(0);
+  }
+
+  /* Drag handle on side panel */
+  #side-panel::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 10px auto 6px;
+    flex-shrink: 0;
+  }
+
+  /* ── Overlays: full screen on mobile ── */
+  .overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 4000;
+    padding-bottom: 56px;
+  }
+
+  /* ── Bottom tab bar ── */
+  #mob-tab-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 56px;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: stretch;
+    z-index: 5000;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .mob-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-size: 8px;
+    letter-spacing: .08em;
+    color: var(--dim);
+    background: none;
+    border: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color .15s;
+    padding: 0;
+    font-family: inherit;
+  }
+  .mob-tab .mob-tab-icon { font-size: 18px; line-height: 1; }
+  .mob-tab.active { color: var(--accent); }
+  .mob-tab.active .mob-tab-icon { filter: drop-shadow(0 0 4px var(--accent)); }
+
+  /* ── KPI grid: 2 columns on mobile ── */
+  .kpi-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+
+  /* ── sp-tabs: scrollable on mobile ── */
+  .sp-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sp-tabs::-webkit-scrollbar { display: none; }
+  .sp-tab { flex-shrink: 0; padding: 8px 14px; font-size: 10px; }
+
+  /* ── News overlay body ── */
+  .ov-body { padding: 10px !important; }
+  .news-item { padding: 10px 0 !important; }
+
+  /* ── Chart overlays ── */
+  .ov-head { padding: 10px 12px !important; flex-wrap: wrap; gap: 8px; }
+  .ov-title { font-size: 12px !important; }
+
+  /* ── AI panel ── */
+  #ai-overlay .ov-body {
+    padding: 10px !important;
+  }
+  #ai-input {
+    font-size: 14px !important; /* prevent iOS zoom on input focus */
+  }
+
+  /* ── Refinery tab ── */
+  #rf-content { flex-direction: column !important; }
+  .rf-info-panel {
+    width: 100% !important;
+    height: 40vh;
+    border-left: none !important;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Platts periodic table ── */
+  .platts-grid { font-size: 8px !important; }
+}
+
+/* ── Show bottom tab bar only on mobile ── */
+#mob-tab-bar { display: none; }
+@media (max-width: 768px) {
+  #mob-tab-bar { display: flex; }
+}
 </style>
 </head>
 <body>
@@ -2729,6 +2919,97 @@ function showView(v){
   if(v==='map') document.querySelector('.pill.active, .pill:first-child').classList.add('active');
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE — Tab bar + Side panel drawer
+═══════════════════════════════════════════════════════════════ */
+function isMobile(){ return window.innerWidth <= 768; }
+
+// Mobile tab switching
+function mobTab(view) {
+  // Update active tab
+  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+  const activeBtn = document.getElementById('mobt-' + view);
+  if(activeBtn) activeBtn.classList.add('active');
+
+  // Close side panel drawer when switching views
+  if(view !== 'map') mobCloseSidePanel();
+
+  // Route to correct view
+  if(view === 'map') {
+    showView('map');
+  } else if(view === 'news') {
+    showView('news');
+  } else if(view === 'chart') {
+    // Show stocks chart as default
+    showChart('stocks');
+  } else if(view === 'ai') {
+    showView('ai');
+  } else if(view === 'refinery') {
+    showView('refinery');
+  }
+}
+
+// Side panel drawer — open
+function mobOpenSidePanel() {
+  const sp = document.getElementById('side-panel');
+  if(sp) {
+    sp.classList.add('mob-open');
+    // Add backdrop
+    let bd = document.getElementById('mob-backdrop');
+    if(!bd) {
+      bd = document.createElement('div');
+      bd.id = 'mob-backdrop';
+      bd.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2999;';
+      bd.onclick = mobCloseSidePanel;
+      document.body.appendChild(bd);
+    }
+    bd.style.display = 'block';
+  }
+}
+
+// Side panel drawer — close
+function mobCloseSidePanel() {
+  const sp = document.getElementById('side-panel');
+  if(sp) sp.classList.remove('mob-open');
+  const bd = document.getElementById('mob-backdrop');
+  if(bd) bd.style.display = 'none';
+}
+
+// Hook into selectCountry — auto-open drawer on mobile
+const _origSelectCountry = selectCountry;
+function selectCountry(name) {
+  _origSelectCountry(name);
+  if(isMobile()) mobOpenSidePanel();
+}
+
+// Sync mob tab bar with desktop view switches
+const _origShowView = showView;
+// (showView already defined — we patch mobile tab highlight after call)
+function _syncMobTab(v) {
+  if(!isMobile()) return;
+  const map = { map:'map', news:'news', ai:'ai', refinery:'refinery', chart:'chart' };
+  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+  const key = Object.keys(map).find(k => v && v.startsWith(k)) || 'map';
+  const btn = document.getElementById('mobt-' + map[key]);
+  if(btn) btn.classList.add('active');
+}
+
+// Swipe down to close side panel
+(function(){
+  let startY = 0;
+  document.addEventListener('touchstart', e => {
+    const sp = document.getElementById('side-panel');
+    if(sp && sp.classList.contains('mob-open')) startY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const sp = document.getElementById('side-panel');
+    if(sp && sp.classList.contains('mob-open')) {
+      const dy = e.changedTouches[0].clientY - startY;
+      if(dy > 80) mobCloseSidePanel(); // swipe down > 80px closes drawer
+    }
+  }, { passive: true });
+})();
+
 function closeOverlay(id){
   document.getElementById(id).classList.add('overlay-hidden');
   if(id==='chart-overlay'){
@@ -4349,5 +4630,29 @@ if(MEDECO_BASE) {
   </div>
 </div>
 <!-- END REFINING OVERLAY -->
+
+<!-- ═══ MOBILE BOTTOM TAB BAR ══════════════════════════════════ -->
+<div id="mob-tab-bar">
+  <button class="mob-tab active" id="mobt-map" onclick="mobTab('map')">
+    <span class="mob-tab-icon">🗺</span>
+    <span>MAP</span>
+  </button>
+  <button class="mob-tab" id="mobt-news" onclick="mobTab('news')">
+    <span class="mob-tab-icon">📡</span>
+    <span>NEWS</span>
+  </button>
+  <button class="mob-tab" id="mobt-chart" onclick="mobTab('chart')">
+    <span class="mob-tab-icon">📈</span>
+    <span>CHARTS</span>
+  </button>
+  <button class="mob-tab" id="mobt-ai" onclick="mobTab('ai')">
+    <span class="mob-tab-icon">🤖</span>
+    <span>AI</span>
+  </button>
+  <button class="mob-tab" id="mobt-refinery" onclick="mobTab('refinery')">
+    <span class="mob-tab-icon">🏭</span>
+    <span>RAFFINAGE</span>
+  </button>
+</div>
 </body>
 </html>
