@@ -2,8 +2,8 @@
   "name": "The Link",
   "short_name": "The Link",
   "description": "Energy markets trading terminal — crude oil, distillates, LNG, gasoline, fuel oil",
-  "start_url": "/Terminal-Plateform/index.html",
-  "scope": "/Terminal-Plateform/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0a0f1e",
   "theme_color": "#0a0f1e",
@@ -22,10 +22,6 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": [
-    "finance",
-    "productivity",
-    "business"
-  ],
+  "categories": ["finance", "productivity", "business"],
   "lang": "en"
 }
