@@ -398,6 +398,7 @@ body {
   #medeco-lng-pills,
   #medeco-gas-pills,
   #medeco-fuel-pills,
+  #medeco-shipping-pills,
   #medeco-status,
   #clock,
   .divider,
@@ -637,20 +638,102 @@ body {
   #mob-charts-overlay { display: flex !important; }
   #mob-charts-overlay.overlay-hidden { display: none !important; }
 }
+
+/* ── Yahoo Finance mini-widgets ──────────────────────────────── */
+.yf-widget {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0 14px;
+  min-width: 88px;
+  cursor: pointer;
+  background: transparent;
+  transition: background .15s;
+  height: 46px;
+  gap: 1px;
+}
+.yf-widget:hover { background: rgba(240,165,0,.05); }
+.yfw-name {
+  font-size: 9px;
+  letter-spacing: .12em;
+  color: #9ba8b7;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.yfw-price {
+  font-size: 13px;
+  font-weight: 600;
+  color: #d1d4dc;
+  font-family: 'DM Mono', monospace;
+  white-space: nowrap;
+  line-height: 1;
+}
+.yfw-chg {
+  font-size: 10px;
+  color: #9ba8b7;
+  font-family: 'DM Mono', monospace;
+  white-space: nowrap;
+  line-height: 1;
+}
+.yfw-chg.up { color: #26a69a; }
+.yfw-chg.dn { color: #ef5350; }
+.yfw-price.up { color: #26a69a; }
+.yfw-price.dn { color: #ef5350; }
+
+/* ── Medeco dropdown menus ────────────────────────────────────── */
+.pill-dropdown {
+  position: relative;
+  display: inline-block;
+}
+.pill-dropdown-btn {
+  padding: 3px 10px; border: 1px solid rgba(240,165,0,.25); color: var(--dim);
+  font-size: 9px; letter-spacing:.1em; cursor:pointer; white-space:nowrap;
+  background: transparent; font-family: inherit; transition: all .15s;
+  display: flex; align-items: center; gap: 5px;
+}
+.pill-dropdown-btn:hover { border-color: var(--accent); color: var(--accent); }
+.pill-dropdown-btn::after {
+  content: '▾'; font-size: 8px; opacity: .7;
+}
+.pill-dropdown-btn.open { border-color: var(--accent); color: var(--accent); background: rgba(240,165,0,.06); }
+.pill-dropdown-menu {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  background: #0d1117;
+  border: 1px solid rgba(240,165,0,.3);
+  min-width: 160px;
+  flex-direction: column;
+  padding: 4px 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,.6);
+}
+.pill-dropdown-menu.open { display: flex; }
+.pill-dropdown-item {
+  padding: 6px 14px; font-size: 9px; letter-spacing:.1em; color: var(--dim);
+  cursor: pointer; white-space: nowrap; font-family: inherit;
+  transition: all .12s; background: transparent; border: none; text-align: left;
+}
+.pill-dropdown-item:hover { background: rgba(240,165,0,.08); color: var(--accent); }
 </style>
 </head>
 <body>
 
 <!-- ═══ TICKER ══════════════════════════════════════════════════ -->
-<!-- Row 1: TradingView ticker tape — full width, WTI + Brent free symbols -->
-<div id="ticker-bar" style="flex-shrink:0;background:#131722;border-bottom:1px solid #1e2a38">
-  <div class="tradingview-widget-container" style="height:46px;overflow:hidden">
+<!-- Row 1: TradingView ticker tape + YF widgets for RBOB & Gasoil -->
+<div id="ticker-bar" style="flex-shrink:0;background:#131722;border-bottom:1px solid #1e2a38;display:flex;align-items:stretch">
+
+  <!-- TradingView ticker — prend tout l'espace restant -->
+  <div class="tradingview-widget-container" style="flex:1;min-width:0;height:46px;overflow:hidden">
     <div class="tradingview-widget-container__widget"></div>
     <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
     {
       "symbols": [
-        {"proName":"TVC:USOIL","title":"WTI Crude Oil"},
-        {"proName":"TVC:UKOIL","title":"Brent Crude Oil"}
+        {"proName":"TVC:UKOIL","title":"Brent Crude"},
+        {"proName":"TVC:USOIL","title":"WTI Crude"},
+        {"proName":"NYSE:TTE","title":"TotalEnergies"},
+        {"proName":"FX:EURUSD","title":"EUR/USD"},
+        {"proName":"FX:EURCHF","title":"EUR/CHF"}
       ],
       "showSymbolLogo": false,
       "isTransparent": true,
@@ -659,6 +742,40 @@ body {
       "locale": "en"
     }
     </script>
+  </div>
+
+  <!-- Mini widgets: RBOB, NAT GAS, VLSFO, HSFO + black placeholder -->
+  <div id="yf-widgets" style="display:flex;align-items:stretch;border-left:1px solid #2a3a4a;flex-shrink:0">
+
+    <div class="yf-widget" id="yfw-rbob" onclick="showChart('medeco-naphtha-crack')" title="RBOB Gasoline — Yahoo Finance RB=F (15min delay) · $/t">
+      <div class="yfw-name">RBOB</div>
+      <div class="yfw-price" id="yfw-rbob-price">—</div>
+      <div class="yfw-chg" id="yfw-rbob-chg">$/t</div>
+    </div>
+
+    <div class="yf-widget" id="yfw-ng" onclick="showChart('medeco-distillate')" title="Natural Gas — Yahoo Finance NG=F (15min delay) · $/t LNG equiv." style="border-left:1px solid #2a3a4a">
+      <div class="yfw-name">NAT GAS</div>
+      <div class="yfw-price" id="yfw-ng-price">—</div>
+      <div class="yfw-chg" id="yfw-ng-chg">$/t</div>
+    </div>
+
+    <div class="yf-widget" id="yfw-vlsfo" onclick="showChart('medeco-vlsfo-crack')" title="VLSFO 0.5% — Estimated from Brent · $/t" style="border-left:1px solid #2a3a4a">
+      <div class="yfw-name">VLSFO</div>
+      <div class="yfw-price" id="yfw-vlsfo-price">—</div>
+      <div class="yfw-chg" id="yfw-vlsfo-chg">$/t</div>
+    </div>
+
+    <div class="yf-widget" id="yfw-hsfo" onclick="showChart('medeco-hsfo-crack')" title="HSFO 380cst — Estimated from Brent · $/t" style="border-left:1px solid #2a3a4a">
+      <div class="yfw-name">HSFO</div>
+      <div class="yfw-price" id="yfw-hsfo-price">—</div>
+      <div class="yfw-chg" id="yfw-hsfo-chg">$/t</div>
+    </div>
+
+    <!-- Placeholder noir — à compléter -->
+    <div style="border-left:1px solid #2a3a4a;width:80px;background:#0a0e14;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <span style="font-size:8px;color:#1e2a38;letter-spacing:.1em">· · ·</span>
+    </div>
+
   </div>
 </div>
 
@@ -695,6 +812,7 @@ body {
   <button class="mode-btn"        id="mode-lng"        onclick="setProductMode('lng')">🧊 LNG</button>
   <button class="mode-btn"        id="mode-gasoline"   onclick="setProductMode('gasoline')">⛽ GASOLINE</button>
   <button class="mode-btn"        id="mode-fuel"       onclick="setProductMode('fuel')">🚢 FUEL OIL</button>
+  <button class="mode-btn"        id="mode-shipping"   onclick="setProductMode('shipping')">⚓ SHIPPING</button>
 </div>
 
 <!-- ═══ HEADER ══════════════════════════════════════════════════ -->
@@ -714,14 +832,92 @@ body {
     <button class="pill" id="pill-storage" onclick="showView('storage')" style="border-color:rgba(99,179,237,.3);color:var(--dim)">📦 STORAGE</button>
     <div id="medeco-pills-sep" style="width:1px;height:16px;background:var(--border);margin:0 4px;align-self:center;flex-shrink:0"></div>
     <span id="medeco-pills-label" style="font-size:8px;color:var(--dim);letter-spacing:.12em;flex-shrink:0;align-self:center">📡 MEDECO</span>
-    <!-- Crude Medeco pills — shown only in crude mode -->
+
+    <!-- ── CRUDE pills ── -->
     <span id="medeco-crude-pills" style="display:contents">
-      <button class="pill medeco-pill" onclick="showChart('medeco-dubai')"      style="border-color:rgba(240,165,0,.25);color:var(--dim)">DUBAI</button>
-      <button class="pill medeco-pill" onclick="showChart('medeco-brent-dub')"  style="border-color:rgba(240,165,0,.25);color:var(--dim)">B/D SPREAD</button>
+
+      <!-- Brent benchmark pills (always visible) -->
       <button class="pill medeco-pill" onclick="showChart('medeco-brent-dtd')"  style="border-color:rgba(240,165,0,.25);color:var(--dim)">BRENT DTD</button>
-      <button class="pill medeco-pill" onclick="showChart('medeco-wti')"        style="border-color:rgba(240,165,0,.25);color:var(--dim)">WTI</button>
-      <button class="pill medeco-pill" onclick="showChart('medeco-murban')"     style="border-color:rgba(240,165,0,.25);color:var(--dim)">MURBAN</button>
-      <button class="pill medeco-pill" onclick="showChart('medeco-oman')"       style="border-color:rgba(240,165,0,.25);color:var(--dim)">OMAN</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-brent-dub')"  style="border-color:rgba(240,165,0,.25);color:var(--dim)">B/D SPREAD</button>
+
+      <!-- NSEA dropdown -->
+      <div class="pill-dropdown" id="dd-nsea">
+        <button class="pill-dropdown-btn" onclick="toggleDropdown('dd-nsea')">NSEA</button>
+        <div class="pill-dropdown-menu" id="dd-nsea-menu">
+          <button class="pill-dropdown-item" onclick="showChart('medeco-brent-spot');closeDropdowns()">Brent Spot</button>
+          <button class="pill-dropdown-item" onclick="showChart('medeco-brent-fwd');closeDropdowns()">Brent Fwd 1m</button>
+          <button class="pill-dropdown-item" onclick="showChart('medeco-forties');closeDropdowns()">Forties</button>
+          <button class="pill-dropdown-item" onclick="showChart('medeco-ekofisk');closeDropdowns()">Ekofisk</button>
+          <button class="pill-dropdown-item" onclick="showChart('medeco-oseberg');closeDropdowns()">Oseberg</button>
+          <button class="pill-dropdown-item" onclick="showChart('medeco-troll');closeDropdowns()">Troll</button>
+          <button class="pill-dropdown-item" onclick="showChart('medeco-johan');closeDropdowns()">Johan Sverdrup</button>
+        </div>
+      </div>
+
+      <!-- MED dropdown -->
+      <div class="pill-dropdown" id="dd-med">
+        <button class="pill-dropdown-btn" onclick="toggleDropdown('dd-med')">MED</button>
+        <div class="pill-dropdown-menu" id="dd-med-menu">
+          <button class="pill-dropdown-item" onclick="showChart('medeco-sahara');closeDropdowns()">Sahara Blend</button>
+          <button class="pill-dropdown-item" onclick="showChart('medeco-basra');closeDropdowns()">Basra</button>
+        </div>
+      </div>
+
+      <!-- ME/GULF dropdown -->
+      <div class="pill-dropdown" id="dd-megulf">
+        <button class="pill-dropdown-btn" onclick="toggleDropdown('dd-megulf')">ME GULF</button>
+        <div class="pill-dropdown-menu" id="dd-megulf-menu">
+          <button class="pill-dropdown-item" onclick="showChart('medeco-dubai');closeDropdowns()">Dubai</button>
+          <button class="pill-dropdown-item" onclick="showChart('medeco-oman');closeDropdowns()">Oman</button>
+          <button class="pill-dropdown-item" onclick="showChart('medeco-murban');closeDropdowns()">Murban</button>
+        </div>
+      </div>
+
+      <!-- AMERICAS dropdown -->
+      <div class="pill-dropdown" id="dd-americas">
+        <button class="pill-dropdown-btn" onclick="toggleDropdown('dd-americas')">AMERICAS</button>
+        <div class="pill-dropdown-menu" id="dd-americas-menu">
+          <button class="pill-dropdown-item" onclick="showChart('medeco-wti-spot');closeDropdowns()">WTI Spot</button>
+          <button class="pill-dropdown-item" onclick="showChart('medeco-wti-brent');closeDropdowns()">WTI/Brent Fut</button>
+        </div>
+      </div>
+
+    </span>
+
+    <!-- ── DISTILLAT pills ── -->
+    <span id="medeco-dist-pills" style="display:none">
+      <button class="pill medeco-pill" onclick="showChart('medeco-diesel-crack')" style="border-color:rgba(34,211,238,.25);color:var(--dim)">DIESEL CRACK</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-distillate')"   style="border-color:rgba(34,211,238,.25);color:var(--dim)">DISTILLATE</button>
+    </span>
+
+    <!-- ── LNG pills ── -->
+    <span id="medeco-lng-pills" style="display:none">
+    </span>
+
+    <!-- ── GASOLINE pills ── -->
+    <span id="medeco-gas-pills" style="display:none">
+      <button class="pill medeco-pill" onclick="showChart('medeco-naphtha-crack')" style="border-color:rgba(74,222,128,.25);color:var(--dim)">NAPHTHA CRACK</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-gasoline')"      style="border-color:rgba(74,222,128,.25);color:var(--dim)">GASOLINE NWE</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-lpg')"           style="border-color:rgba(74,222,128,.25);color:var(--dim)">LPG</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-c3')"            style="border-color:rgba(74,222,128,.25);color:var(--dim)">C3</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-c4')"            style="border-color:rgba(74,222,128,.25);color:var(--dim)">C4</button>
+    </span>
+
+    <!-- ── FUEL OIL pills ── -->
+    <span id="medeco-fuel-pills" style="display:none">
+      <button class="pill medeco-pill" onclick="showChart('medeco-vlsfo')"       style="border-color:rgba(251,146,60,.25);color:var(--dim)">VLSFO</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-hsfo')"        style="border-color:rgba(251,146,60,.25);color:var(--dim)">HSFO</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-vlsfo-crack')" style="border-color:rgba(251,146,60,.25);color:var(--dim)">VLSFO CRACK</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-hsfo-crack')"  style="border-color:rgba(251,146,60,.25);color:var(--dim)">HSFO CRACK</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-lsfo')"        style="border-color:rgba(251,146,60,.25);color:var(--dim)">LSFO</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-vgo')"         style="border-color:rgba(251,146,60,.25);color:var(--dim)">VGO</button>
+    </span>
+
+    <!-- ── SHIPPING pills ── -->
+    <span id="medeco-shipping-pills" style="display:none">
+      <button class="pill medeco-pill" onclick="showChart('medeco-faf')"  style="border-color:rgba(52,211,153,.25);color:var(--dim)">FAF</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-td7')"  style="border-color:rgba(52,211,153,.25);color:var(--dim)">TD7 NSEA</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-td25')" style="border-color:rgba(52,211,153,.25);color:var(--dim)">TD25</button>
     </span>
   </div>
   <div id="clock" style="display:flex;align-items:center;gap:10px">
@@ -993,7 +1189,7 @@ const COUNTRIES = {
       {n:"WTI Cushing",api:40.8,s:0.42,out:515,diff:"Benchmark"},
       {n:"Permian 44",api:44.0,s:0.05,out:1692,diff:"+$1–2/bbl WTI"},
       {n:"Bakken",api:42.8,s:0.10,out:1249,diff:"≈ WTI"},
-      {n:"Light Louisiana Sweet",api:36.7,s:0.33,out:239,diff:"+$1–3/bbl WTI"},
+      {n:"Light Louisiana Sweet",api:41.1,s:0.40,out:239,diff:"+$1–3/bbl WTI"},
       {n:"Eagle Ford Condensate",api:55.0,s:0.04,out:221,diff:"–$2–4/bbl Brent"},
       {n:"Mars Blend (GOM)",api:30.0,s:1.82,out:433,diff:"–$2–4/bbl Brent"},
       {n:"WCS (import CAN)",api:20.9,s:3.59,out:1600,diff:"–$14–18/bbl WTI"},
@@ -1007,7 +1203,7 @@ const COUNTRIES = {
   "Saudi Arabia": {
     coords:[24,45], group:"opec", prod:9.0, exp:6.0, imp:0, bal:9.0, opec:true, sanc:false, res:267.2,
     grades:[
-      {n:"Arab Light",api:33.3,s:1.96,out:5502,diff:"–$0.5/bbl Brent (OSP)"},
+      {n:"Arab Light",api:34.2,s:1.96,out:5502,diff:"–$0.5/bbl Brent (OSP)"},
       {n:"Arab Extra Light",api:39.2,s:1.00,out:1527,diff:"+$1–2/bbl Arab Lt"},
       {n:"Arab Medium",api:30.9,s:2.54,out:1257,diff:"–$1.5/bbl Arab Lt"},
       {n:"Arab Heavy",api:27.8,s:2.75,out:1985,diff:"–$3/bbl Arab Lt"},
@@ -1023,7 +1219,7 @@ const COUNTRIES = {
   "Russia": {
     coords:[60,90], group:"russia", prod:9.1, exp:6.9, imp:0, bal:9.1, opec:false, sanc:true, res:107.8,
     grades:[
-      {n:"Urals (CIF NWE)",api:31.3,s:1.25,out:3151,diff:"–$6–10/bbl Brent (cap discount)"},
+      {n:"Urals (CIF NWE)",api:31.7,s:1.70,out:3151,diff:"–$6–10/bbl Brent (cap discount)"},
       {n:"ESPO Blend",api:34.7,s:0.55,out:920,diff:"–$3–5/bbl Brent (Asia)"},
       {n:"Siberian Light",api:35.1,s:0.57,out:664,diff:"–$4–6/bbl Brent"},
       {n:"Sokol (Sakhalin)",api:37.4,s:0.20,out:150,diff:"–$2–4/bbl Brent"},
@@ -1039,9 +1235,9 @@ const COUNTRIES = {
     coords:[33,44], group:"opec", prod:4.3, exp:3.3, imp:0, bal:4.3, opec:true, sanc:false, res:145.0,
     grades:[
       {n:"Basra Light",api:28.8,s:3.16,out:3057,diff:"–$2–3/bbl Brent (OSP)"},
-      {n:"Basra Heavy",api:23.6,s:4.20,out:840,diff:"–$5–7/bbl Brent"},
+      {n:"Basra Heavy",api:24.0,s:4.05,out:840,diff:"–$5–7/bbl Brent"},
       {n:"Basra Medium",api:26.0,s:3.50,out:500,diff:"–$3–5/bbl Brent"},
-      {n:"Kirkuk",api:34.3,s:2.23,out:300,diff:"–$1–2/bbl Brent"},
+      {n:"Kirkuk",api:34.2,s:2.24,out:300,diff:"–$1–2/bbl Brent"},
     ],
     flows:[{d:"India",c:[22,80],v:"1.1 Mb/d",t:"opec"},{d:"China",c:[35,105],v:"1.0 Mb/d",t:"opec"},{d:"Europe",c:[50,10],v:"0.6 Mb/d",t:"opec"},{d:"Turkey",c:[37,36],v:"0.4 Mb/d",t:"opec"}],
     tankers:[{from:[29.5,48.5],to:[22,80],l:"Basra→India (VLCC)"}]
@@ -1077,7 +1273,7 @@ const COUNTRIES = {
       {n:"Forties",api:37.3,s:0.54,out:450,diff:"Sets Dated Brent level"},
       {n:"Oseberg",api:39.6,s:0.20,out:150,diff:"+$1.04/bbl Dated Brent"},
       {n:"Ekofisk",api:38.5,s:0.19,out:192,diff:"+$1.04/bbl Dated Brent"},
-      {n:"Johan Sverdrup",api:28.9,s:0.10,out:755,diff:"Newest, heaviest sweet NCS"},
+      {n:"Johan Sverdrup",api:28.7,s:0.81,out:755,diff:"Newest, heaviest sweet NCS"},
     ],
     flows:[{d:"UK/NWE",c:[52,4],v:"0.8 Mb/d",t:"western"},{d:"Poland/Baltics",c:[52,20],v:"0.3 Mb/d",t:"western"},{d:"US",c:[38,-97],v:"0.2 Mb/d",t:"western"}],
     tankers:[{from:[60,4],to:[52,4],l:"North Sea→Rotterdam (Aframax)"}]
@@ -1110,7 +1306,7 @@ const COUNTRIES = {
       {n:"Bonny Light",api:32.75,s:0.18,out:225,diff:"+$1.58/bbl Dated Brent"},
       {n:"Qua Iboe",api:36.0,s:0.13,out:300,diff:"+$1.5–2/bbl Dated Brent"},
       {n:"Agbami",api:47.9,s:0.04,out:235,diff:"+$3–4/bbl Dated Brent (ultra-light)"},
-      {n:"Forcados",api:30.3,s:0.28,out:242,diff:"+$0.5–1/bbl Dated Brent"},
+      {n:"Forcados",api:41.0,s:0.55,out:242,diff:"+$0.5–1/bbl Dated Brent"},
     ],
     flows:[{d:"Europe",c:[50,10],v:"0.4 Mb/d",t:"opec"},{d:"India",c:[22,80],v:"0.3 Mb/d",t:"opec"},{d:"China",c:[35,105],v:"0.2 Mb/d",t:"opec"}],
     tankers:[{from:[4,7],to:[50,10],l:"Niger Delta→Europe (Suezmax)"}]
@@ -1129,7 +1325,7 @@ const COUNTRIES = {
   "Kazakhstan": {
     coords:[48,68], group:"russia", prod:1.8, exp:1.3, imp:0, bal:1.8, opec:false, sanc:false, res:30.0,
     grades:[
-      {n:"CPC Blend (export)",api:46.2,s:0.54,out:1400,diff:"+$0–2/bbl Brent (light sweet)"},
+      {n:"CPC Blend (export)",api:45.3,s:0.56,out:1400,diff:"+$0–2/bbl Brent (light sweet)"},
       {n:"Tengiz (field)",api:45.5,s:0.53,out:700,diff:"Feedstock for CPC Blend"},
       {n:"Kashagan (field)",api:41.0,s:1.50,out:400,diff:"Sour — blended before export"},
     ],
@@ -1169,7 +1365,7 @@ const COUNTRIES = {
   "Algeria": {
     coords:[28,3], group:"opec", prod:1.2, exp:0.6, imp:0, bal:1.2, opec:true, sanc:false, res:12.2,
     grades:[
-      {n:"Saharan Blend",api:43.2,s:0.10,out:956,diff:"+$1.5–2.5/bbl Dated Brent"},
+      {n:"Saharan Blend",api:43.2,s:0.13,out:956,diff:"+$1.5–2.5/bbl Dated Brent"},
       {n:"Algerian Condensate",api:68.7,s:0.00,out:229,diff:"Naphtha crack premium"},
     ],
     flows:[{d:"Italy",c:[42,13],v:"0.25 Mb/d",t:"opec"},{d:"France/Spain",c:[44,3],v:"0.2 Mb/d",t:"opec"}],
@@ -1225,7 +1421,6 @@ const TICK_FALLBACK = [
   {n:"BRENT SPOT", v:"—",    c:"loading", d:""},
   {n:"MURBAN",     v:"—",    c:"loading", d:""},
   {n:"RBOB",       v:"—",    c:"loading", d:""},
-  {n:"GASOIL ULS", v:"—",    c:"loading", d:""},
   {n:"NAT GAS",    v:"—",    c:"loading", d:""},
   {n:"B/W SPREAD", v:"—",    c:"live",    d:""},
   {n:"OPEC CUT",   v:"-2.2 Mb/d", c:"extended", d:""},
@@ -1237,9 +1432,20 @@ const TICK_FALLBACK = [
   {n:"CHINA IMP",  v:"11.1 Mb/d", c:"+3% YoY", d:"up"},
 ];
 
-// Yahoo Finance symbols kept for reference (now handled by TradingView ticker widget)
-// Medeco API still active if MEDECO_BASE is configured
-const YF_SYMBOLS = []; // Deprecated — TradingView ticker widget handles live prices
+// Yahoo Finance — uniquement pour RBOB et Heating Oil (Gasoil NYMEX)
+// Ces symboles ne sont PAS disponibles gratuitement sur TradingView → pas de doublon
+// Conversion factors to $/t
+// RBOB:   density 0.74 t/m3 -> 1 gal = 0.002801 t -> x357.0
+// NatGas: 1 MMBtu ~ 1/52.3 t LNG -> x52.3
+// HSFO:   estimated Brent($/t) - 120 $/t crack (rough)
+// VLSFO:  estimated Brent($/t) - 30 $/t crack (rough)
+
+const YF_SYMBOLS = [
+  { sym: 'RB=F',  label: 'RBOB',       unit: '$/t', conv: v => v * 357.0  },
+  { sym: 'NG=F',  label: 'NAT GAS',    unit: '$/t', conv: v => v * 52.3   },
+  // Brent raw price (hidden) — used to estimate HSFO & VLSFO
+  { sym: 'BZ=F',  label: '_BRENT_RAW', unit: '$/bbl', conv: v => v, hidden: true },
+];
 
 // MEDECO internal API stub — replace BASE_URL with your actual endpoint when running locally
 // When on corp network, set MEDECO_BASE to your server proxy URL
@@ -1249,12 +1455,37 @@ const MEDECO_BASE = 'http://localhost:8765/medeco'; // e.g. 'http://localhost:87
 // Set to null to disable, or keep URL for auto-fetch when proxy is running
 const SHAREPOINT_PRESS_URL = 'http://applications.dts.corp.local/rpt/press/TOTSAPressReports/Forms/Report%20by%20Date.aspx';
 const MEDECO_SERIES = [
-  {serie:"cr.BRED.DTD@SP@P.M", label:"BRENT DTD",  unit:"$/bbl"},
-  {serie:"cr.WTXS.SP@P.M",     label:"WTI",        unit:"$/bbl"},
-  {serie:"cr.MURB.SP@P.M",     label:"MURBAN",     unit:"$/bbl"},
-  {serie:"cr.BRED.DTD@DUB@SP@P.M", label:"B/D SPREAD", unit:"$/bbl"},
-  {serie:"fu.RBOB_ICE.E1.C",   label:"RBOB",       unit:"$/gal"},
-  {serie:"fu.ULS.E1.C",        label:"GASOIL ULS", unit:"$/t"},
+  // ── Crude ──────────────────────────────────────────────────────
+  {serie:"cr.BRED.DTD@SP@P.M",       label:"Brent Dated",     unit:"$/bbl"},
+  {serie:"cr.NINI.AAVJB00@P.M",      label:"Brent Spot",      unit:"$/bbl"},
+  {serie:"fu.BR.E1.M",               label:"Brent Fwd 1m",    unit:"$/bbl"},
+  {serie:"cr.WTIM.WMCRB00@P.M",      label:"WTI",             unit:"$/bbl"},
+  {serie:"fu.WTIBR.E1.C",            label:"WTI/Brent Fut",   unit:"$/bbl"},
+  {serie:"cr.DBAI.1LI@SP@P.M",       label:"Dubai",           unit:"$/bbl"},
+  {serie:"cr.OMAN.1LI@SP@P.M",       label:"Oman",            unit:"$/bbl"},
+  {serie:"cr.MURB.SP@P.M",           label:"Murban",          unit:"$/bbl"},
+  {serie:"cr.BRED.DTD@DUB@SP@P.M",   label:"Brent/Dubai",     unit:"$/bbl"},
+  {serie:"cr.FORT.D@SP@P.M",         label:"Forties",         unit:"$/bbl"},
+  {serie:"cr.EKOF.D@SP@P.M",         label:"Ekofisk",         unit:"$/bbl"},
+  {serie:"cr.OSEB.D@SP@P.M",         label:"Oseberg",         unit:"$/bbl"},
+  {serie:"cr.TROL.AAWEY00@P.M",      label:"Troll",           unit:"$/bbl"},
+  {serie:"cr.JOHS.AJSVB00@P.M",      label:"Johan Sverdrup",  unit:"$/bbl"},
+  {serie:"cr.BSM.SP@BGR.",           label:"Basra",           unit:"$/bbl"},
+  {serie:"cr.SAM.SP@BGR.M",          label:"Sahara Blend",    unit:"$/bbl"},
+  // ── Products / Cracks ──────────────────────────────────────────
+  {serie:"pr.NA.CCNWEA@P.H/8.9 - cr.BRED.DTD@SP@P.M",     label:"Naphtha Crack",  unit:"$/bbl"},
+  {serie:"pr.GULSD.BFROTT@P@10.M / 7.46 - cr.BRED.DTD@SP@P.M", label:"Diesel Crack", unit:"$/bbl"},
+  {serie:"pr.FO05.PUMFD00@P.M / 6.35 - cr.BRED.DTD@SP@P.M",    label:"VLSFO Crack",  unit:"$/bbl"},
+  {serie:"pr.FO35.BFROTT@P.M / 6.35 - cr.BRED.DTD@SP@P.M",     label:"HSFO Crack",   unit:"$/bbl"},
+  {serie:"pr.FO10.CCNWEG@P.M",       label:"LSFO",            unit:"$/t"},
+  {serie:"pr.GO01.CCNWEA@P.M",       label:"VGO",             unit:"$/t"},
+  {serie:"pr.KJ.CCNWEA@P.M",         label:"Distillate",      unit:"$/t"},
+  {serie:"pr.MG.NWE@NOXY@AR.M",      label:"Gasoline NWE",    unit:"$/t"},
+  {serie:"pr.LPGP.LCNWEA@AR.M",      label:"LPG/C3/C4",       unit:"$/t"},
+  {serie:"fr.CFAF.FSFRM00@P.C",      label:"FAF",             unit:"$/t"},
+  // ── Shipping (Freight) ─────────────────────────────────────────
+  {serie:"fr.TD7.WD@BITR@WS.M",      label:"TD7 NSEA",        unit:"WS"},
+  {serie:"fr.TD25.WD@BITR@WS.M",     label:"TD25",            unit:"WS"},
 ];
 
 let tickerLiveData = {}; // symbol -> {price, chg, pct}
@@ -1286,7 +1517,7 @@ function renderTicker(){
   ts.style.animation='';
 }
 
-async function fetchYahooPrice(sym){
+async function fetchYahooPrice(sym, conv){
   // Use allorigins CORS proxy to call Yahoo Finance
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2d`;
   const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
@@ -1296,12 +1527,19 @@ async function fetchYahooPrice(sym){
     const data = JSON.parse(j.contents);
     const meta = data?.chart?.result?.[0]?.meta;
     if(!meta) return null;
-    const price  = meta.regularMarketPrice;
-    const prev   = meta.chartPreviousClose || meta.previousClose;
-    const chg    = price - prev;
-    const pct    = (chg / prev * 100);
-    const dir    = chg >= 0 ? 'up' : 'dn';
-    return { price: price.toFixed(2), chg: `${chg>=0?'+':''}${chg.toFixed(2)} (${pct>=0?'+':''}${pct.toFixed(2)}%)`, dir };
+    let price = meta.regularMarketPrice;
+    let prev  = meta.chartPreviousClose || meta.previousClose;
+    // Apply unit conversion (e.g. $/gal -> $/t)
+    if(conv){ price = conv(price); prev = conv(prev); }
+    const chg = price - prev;
+    const pct = (chg / prev * 100);
+    const dir = chg >= 0 ? 'up' : 'dn';
+    return {
+      raw:   meta.regularMarketPrice, // unconverted, for derived calcs
+      price: Math.round(price).toString(),
+      chg:   `${chg>=0?'+':''}${Math.round(chg)} (${pct>=0?'+':''}${pct.toFixed(1)}%)`,
+      dir
+    };
   } catch(e) {
     return null;
   }
@@ -1313,7 +1551,7 @@ async function fetchMedecoSerie(serie){
     const today = new Date();
     const from  = new Date(today); from.setDate(1);
     const fmt   = d => d.toISOString().slice(0,10);
-    const url   = `${MEDECO_BASE}/series/${serie}/values?from=${fmt(from)}&to=${fmt(today)}`;
+    const url   = `${MEDECO_BASE}/values?serie=${encodeURIComponent(serie)}&from=${fmt(from)}&to=${fmt(today)}`;
     const r = await fetch(url);
     const j = await r.json();
     const vals = j.values || [];
@@ -1328,17 +1566,60 @@ async function fetchMedecoSerie(serie){
   } catch(e) { return null; }
 }
 
+// Map YF label -> DOM widget IDs
+const YF_WIDGET_MAP = {
+  'RBOB':    { price: 'yfw-rbob-price',  chg: 'yfw-rbob-chg'  },
+  'NAT GAS': { price: 'yfw-ng-price',    chg: 'yfw-ng-chg'    },
+  'VLSFO':   { price: 'yfw-vlsfo-price', chg: 'yfw-vlsfo-chg' },
+  'HSFO':    { price: 'yfw-hsfo-price',  chg: 'yfw-hsfo-chg'  },
+};
+
+function _updateWidget(label, priceStr, chgStr, dir, unit){
+  const w = YF_WIDGET_MAP[label];
+  if(!w) return;
+  const pEl = document.getElementById(w.price);
+  const cEl = document.getElementById(w.chg);
+  if(pEl){ pEl.textContent = priceStr + (unit ? ' '+unit : ''); pEl.className = 'yfw-price ' + dir; }
+  if(cEl){ cEl.textContent = chgStr;  cEl.className = 'yfw-chg ' + dir; }
+}
+
 async function refreshTickerLive(){
-  // Try Yahoo Finance quotes
-  const yf = YF_SYMBOLS.map(s => fetchYahooPrice(s.sym).then(r => ({label:s.label, unit:s.unit, data:r})));
+  // Fetch all YF symbols (including hidden _BRENT_RAW)
+  const yf = YF_SYMBOLS.map(s => fetchYahooPrice(s.sym, s.conv).then(r => ({...s, data:r})));
   const results = await Promise.allSettled(yf);
+
+  let brentRaw = null; // raw Brent $/bbl for HSFO/VLSFO estimation
+
   results.forEach(({status, value}) => {
-    if(status==='fulfilled' && value?.data){
-      const {label, unit, data} = value;
-      const price = unit ? `${data.price} ${unit}` : data.price;
-      tickerLiveData[label] = { price, chg: data.chg, dir: data.dir };
-    }
+    if(status !== 'fulfilled' || !value?.data) return;
+    const {label, unit, data, hidden} = value;
+
+    // Store raw Brent for derived calcs
+    if(label === '_BRENT_RAW'){ brentRaw = data.raw; return; }
+
+    // Update scrolling ticker
+    tickerLiveData[label] = { price: data.price + (unit?' '+unit:''), chg: data.chg, dir: data.dir };
+
+    // Update DOM widget
+    if(!hidden) _updateWidget(label, data.price, data.chg, data.dir, unit);
   });
+
+  // Derive HSFO & VLSFO from Brent $/t + estimated crack spreads
+  // Brent $/bbl -> $/t: x7.45 barrels/tonne
+  if(brentRaw){
+    const brentT = brentRaw * 7.45;
+    // VLSFO: Brent - ~30 $/t (IMO 2020 premium product)
+    const vlsfoPrice = Math.round(brentT - 30);
+    const vlsfoChg   = '~est.';
+    _updateWidget('VLSFO', vlsfoPrice.toString(), vlsfoChg, 'neut', '$/t');
+    tickerLiveData['VLSFO'] = { price: vlsfoPrice+' $/t', chg: '~est.', dir: '' };
+    // HSFO: Brent - ~120 $/t (heavy sour discount)
+    const hsfoPrice = Math.round(brentT - 120);
+    _updateWidget('HSFO', hsfoPrice.toString(), '~est.', 'neut', '$/t');
+    tickerLiveData['HSFO'] = { price: hsfoPrice+' $/t', chg: '~est.', dir: '' };
+  }
+  
+  renderTicker();
 
   // Try Medeco if configured
   if(MEDECO_BASE){
@@ -1384,6 +1665,13 @@ async function prefetchMedecoBulk() {
 }
 // Fire after a short delay to let the page render first
 setTimeout(prefetchMedecoBulk, 1500);
+
+// Yahoo Finance live prices for RBOB + Gasoil (not available on free TradingView)
+// Delay slightly more to not compete with page render
+setTimeout(() => {
+  refreshTickerLive();
+  setInterval(refreshTickerLive, 5 * 60 * 1000); // refresh every 5 min
+}, 3000);
 
 /* ════════════════════════════════════════════════════════════════
    CLOCK
@@ -1822,12 +2110,16 @@ const OPEC_DATA=[
   {year:'2022',saudi:10.5,russia:9.9,iraq:4.4,uae:3.0,iran:2.6},
   {year:'2023',saudi:9.7,russia:9.5,iraq:4.3,uae:3.3,iran:3.0},
   {year:'2024',saudi:9.0,russia:9.2,iraq:4.2,uae:3.5,iran:3.4},
+  {year:'2025',saudi:8.9,russia:9.0,iraq:4.3,uae:3.6,iran:3.4},
+  {year:'2024',saudi:9.0,russia:9.2,iraq:4.2,uae:3.5,iran:3.4},
 ];
 const BALANCE_DATA=[
   {year:'2015',supply:94.6,demand:95.0},{year:'2016',supply:95.8,demand:96.9},
   {year:'2017',supply:97.6,demand:98.1},{year:'2018',supply:99.8,demand:99.3},
   {year:'2019',supply:100.1,demand:100.5},{year:'2020',supply:90.6,demand:90.7},
   {year:'2021',supply:95.2,demand:96.5},{year:'2022',supply:100.1,demand:99.6},
+  {year:'2023',supply:101.8,demand:101.7},{year:'2024',supply:102.8,demand:103.0},
+  {year:'2025e',supply:104.1,demand:103.8},{year:'2022',supply:100.1,demand:99.6},
   {year:'2023',supply:101.8,demand:101.7},{year:'2024',supply:102.4,demand:101.8},
 ];
 const STOCKS_DATA=BP_MONTHS.map((m,i)=>({m,v:[428,503,508,521,492,488,476,482,418,416,412,434,416,412,415,426,432,415,448,476,460,454,425,429,420,448,460,448,413,423,418][i]}));
@@ -2236,7 +2528,7 @@ const CHART_CONFIGS = {
   },
   opec:{
     title:'OPEC+ PRODUCTION BY COUNTRY (Mb/d)',
-    meta:'Annual · 2015–2024 · Source: OPEC',
+    meta:'Annual · 2015–2025e · Source: OPEC / IEA OMR Feb 2025',
     tvSymbol:null,
     build:(ctx)=>new Chart(ctx,{type:'bar',data:{labels:OPEC_DATA.map(d=>d.year),datasets:[
       {label:'Saudi Arabia',data:OPEC_DATA.map(d=>d.saudi),backgroundColor:COLORS.accent},
@@ -2269,7 +2561,7 @@ const CHART_CONFIGS = {
   },
   balance:{
     title:'GLOBAL OIL SUPPLY vs DEMAND (Mb/d)',
-    meta:'Annual · 2015–2024 · Source: IEA',
+    meta:'Annual · 2015–2025e · Source: IEA OMR Feb 2025',
     tvSymbol:null,
     build:(ctx)=>new Chart(ctx,{type:'line',data:{labels:BALANCE_DATA.map(d=>d.year),datasets:[{label:'Supply',data:BALANCE_DATA.map(d=>d.supply),borderColor:COLORS.green,pointRadius:4,tension:.3,fill:false},{label:'Demand',data:BALANCE_DATA.map(d=>d.demand),borderColor:COLORS.accent2,pointRadius:4,tension:.3,fill:false}]},options:chartOpts()})
   },
@@ -2322,6 +2614,142 @@ const CHART_CONFIGS = {
     tvSymbol:null,
     medeco:'cr.OMAN.1LI@SP@P.M', medecoLabel:'Oman', medecoColor:'#fb923c', medecoUnit:'$/bbl'
   },
+  // ── Crude — new series ─────────────────────────────────────────
+  'medeco-brent-spot': {
+    title:'BRENT SPOT ($/bbl)', meta:'Source: Medeco · cr.NINI.AAVJB00@P.M',
+    medeco:'cr.NINI.AAVJB00@P.M', medecoLabel:'Brent Spot', medecoColor:'#f0a500', medecoUnit:'$/bbl'
+  },
+  'medeco-brent-fwd': {
+    title:'BRENT FORWARD 1st NEARBY ($/bbl)', meta:'Source: Medeco · fu.BR.E1.M',
+    medeco:'fu.BR.E1.M', medecoLabel:'Brent Fwd 1m', medecoColor:'#fbbf24', medecoUnit:'$/bbl'
+  },
+  'medeco-wti-spot': {
+    title:'WTI SPOT ($/bbl)', meta:'Source: Medeco · cr.WTIM.WMCRB00@P.M',
+    tvSymbol:'TVC:USOIL',
+    medeco:'cr.WTIM.WMCRB00@P.M', medecoLabel:'WTI Spot', medecoColor:'#4fc3f7', medecoUnit:'$/bbl'
+  },
+  'medeco-wti-brent': {
+    title:'WTI / BRENT FUTURE ($/bbl)', meta:'Source: Medeco · fu.WTIBR.E1.C',
+    medeco:'fu.WTIBR.E1.C', medecoLabel:'WTI/Brent Fut', medecoColor:'#38bdf8', medecoUnit:'$/bbl'
+  },
+  'medeco-forties': {
+    title:'FORTIES SPOT ($/bbl)', meta:'Source: Medeco · cr.FORT.D@SP@P.M',
+    medeco:'cr.FORT.D@SP@P.M', medecoLabel:'Forties', medecoColor:'#a78bfa', medecoUnit:'$/bbl'
+  },
+  'medeco-ekofisk': {
+    title:'EKOFISK SPOT ($/bbl)', meta:'Source: Medeco · cr.EKOF.D@SP@P.M',
+    medeco:'cr.EKOF.D@SP@P.M', medecoLabel:'Ekofisk', medecoColor:'#c084fc', medecoUnit:'$/bbl'
+  },
+  'medeco-oseberg': {
+    title:'OSEBERG SPOT ($/bbl)', meta:'Source: Medeco · cr.OSEB.D@SP@P.M',
+    medeco:'cr.OSEB.D@SP@P.M', medecoLabel:'Oseberg', medecoColor:'#e879f9', medecoUnit:'$/bbl'
+  },
+  'medeco-troll': {
+    title:'TROLL SPOT ($/bbl)', meta:'Source: Medeco · cr.TROL.AAWEY00@P.M',
+    medeco:'cr.TROL.AAWEY00@P.M', medecoLabel:'Troll', medecoColor:'#f472b6', medecoUnit:'$/bbl'
+  },
+  'medeco-johan': {
+    title:'JOHAN SVERDRUP SPOT ($/bbl)', meta:'Source: Medeco · cr.JOHS.AJSVB00@P.M',
+    medeco:'cr.JOHS.AJSVB00@P.M', medecoLabel:'Johan Sverdrup', medecoColor:'#fb923c', medecoUnit:'$/bbl'
+  },
+  'medeco-basra': {
+    title:'BASRA SPOT ($/bbl)', meta:'Source: Medeco · cr.BSM.SP@BGR.M',
+    medeco:'cr.BSM.SP@BGR.M', medecoLabel:'Basra', medecoColor:'#34d399', medecoUnit:'$/bbl'
+  },
+  'medeco-sahara': {
+    title:'SAHARA BLEND SPOT ($/bbl)', meta:'Source: Medeco · cr.SAM.SP@BGR.M',
+    medeco:'cr.SAM.SP@BGR.M', medecoLabel:'Sahara Blend', medecoColor:'#6ee7b7', medecoUnit:'$/bbl'
+  },
+
+  // ── DISTILLAT ─────────────────────────────────────────────────
+  'medeco-diesel-crack': {
+    title:'DIESEL CRACK vs BRENT ($/bbl)',
+    meta:'pr.GULSD.BFROTT@P@10.M / 7.46  −  cr.BRED.DTD@SP@P.M',
+    medecoLabel:'Diesel Crack', medecoColor:'#38bdf8', medecoUnit:'$/bbl',
+    // crack mode: fetch A and B separately, compute A/divisorA - B
+    crack: true,
+    medecoA:'pr.GULSD.BFROTT@P@10.M', divisorA: 7.46,
+    medecoB:'cr.BRED.DTD@SP@P.M',     divisorB: 1,
+  },
+  'medeco-distillate': {
+    title:'DISTILLATE NWE ($/t)', meta:'Source: Medeco · pr.KJ.CCNWEA@P.M',
+    medeco:'pr.KJ.CCNWEA@P.M', medecoLabel:'Distillate', medecoColor:'#4ade80', medecoUnit:'$/t'
+  },
+
+  // ── GASOLINE ──────────────────────────────────────────────────
+  'medeco-naphtha-crack': {
+    title:'NAPHTHA CRACK vs BRENT ($/bbl)',
+    meta:'pr.NA.CCNWEA@P.H / 8.9  −  cr.BRED.DTD@SP@P.M',
+    medecoLabel:'Naphtha Crack', medecoColor:'#22d3ee', medecoUnit:'$/bbl',
+    crack: true,
+    medecoA:'pr.NA.CCNWEA@P.H', divisorA: 8.9,
+    medecoB:'cr.BRED.DTD@SP@P.M', divisorB: 1,
+  },
+  'medeco-gasoline': {
+    title:'GASOLINE NWE ($/t)', meta:'Source: Medeco · pr.MG.NWE@NOXY@AR.M',
+    medeco:'pr.MG.NWE@NOXY@AR.M', medecoLabel:'Gasoline NWE', medecoColor:'#86efac', medecoUnit:'$/t'
+  },
+  'medeco-lpg': {
+    title:'LPG NWE ($/t)', meta:'Source: Medeco · pr.LPGP.LCNWEA@AR.M',
+    medeco:'pr.LPGP.LCNWEA@AR.M', medecoLabel:'LPG', medecoColor:'#bef264', medecoUnit:'$/t'
+  },
+  'medeco-c3': {
+    title:'C3 PROPANE NWE ($/t)', meta:'Source: Medeco · pr.LPGP.LCNWEA@AR.M',
+    medeco:'pr.LPGP.LCNWEA@AR.M', medecoLabel:'C3 Propane', medecoColor:'#d9f99d', medecoUnit:'$/t'
+  },
+  'medeco-c4': {
+    title:'C4 BUTANE NWE ($/t)', meta:'Source: Medeco · pr.LPGP.LCNWEA@AR.M',
+    medeco:'pr.LPGP.LCNWEA@AR.M', medecoLabel:'C4 Butane', medecoColor:'#ecfccb', medecoUnit:'$/t'
+  },
+
+  // ── FUEL OIL ──────────────────────────────────────────────────
+  'medeco-vlsfo': {
+    title:'VLSFO 0.5% ($/t)', meta:'Source: Medeco · pr.FO05.PUMFD00@P.M',
+    medeco:'pr.FO05.PUMFD00@P.M', medecoLabel:'VLSFO', medecoColor:'#fb923c', medecoUnit:'$/t'
+  },
+  'medeco-hsfo': {
+    title:'HSFO 380cst ($/t)', meta:'Source: Medeco · pr.FO35.BFROTT@P.M',
+    medeco:'pr.FO35.BFROTT@P.M', medecoLabel:'HSFO', medecoColor:'#ef4444', medecoUnit:'$/t'
+  },
+  'medeco-vlsfo-crack': {
+    title:'VLSFO CRACK vs BRENT ($/bbl)',
+    meta:'pr.FO05.PUMFD00@P.M / 6.35  −  cr.BRED.DTD@SP@P.M',
+    medecoLabel:'VLSFO Crack', medecoColor:'#fdba74', medecoUnit:'$/bbl',
+    crack: true,
+    medecoA:'pr.FO05.PUMFD00@P.M', divisorA: 6.35,
+    medecoB:'cr.BRED.DTD@SP@P.M',  divisorB: 1,
+  },
+  'medeco-hsfo-crack': {
+    title:'HSFO CRACK vs BRENT ($/bbl)',
+    meta:'pr.FO35.BFROTT@P.M / 6.35  −  cr.BRED.DTD@SP@P.M',
+    medecoLabel:'HSFO Crack', medecoColor:'#fca5a5', medecoUnit:'$/bbl',
+    crack: true,
+    medecoA:'pr.FO35.BFROTT@P.M', divisorA: 6.35,
+    medecoB:'cr.BRED.DTD@SP@P.M', divisorB: 1,
+  },
+  'medeco-lsfo': {
+    title:'LSFO NWE ($/t)', meta:'Source: Medeco · pr.FO10.CCNWEG@P.M',
+    medeco:'pr.FO10.CCNWEG@P.M', medecoLabel:'LSFO', medecoColor:'#f97316', medecoUnit:'$/t'
+  },
+  'medeco-vgo': {
+    title:'VGO NWE ($/t)', meta:'Source: Medeco · pr.GO01.CCNWEA@P.M',
+    medeco:'pr.GO01.CCNWEA@P.M', medecoLabel:'VGO', medecoColor:'#a3e635', medecoUnit:'$/t'
+  },
+
+  // ── SHIPPING ──────────────────────────────────────────────────
+  'medeco-faf': {
+    title:'FAF ($/t)', meta:'Source: Medeco · fr.CFAF.FSFRM00@P.C',
+    medeco:'fr.CFAF.FSFRM00@P.C', medecoLabel:'FAF', medecoColor:'#cbd5e1', medecoUnit:'$/t'
+  },
+  'medeco-td7': {
+    title:'TD7 — NSEA CLEAN TANKER (WS)', meta:'Source: Medeco · fr.TD7.WD@BITR@WS.M',
+    medeco:'fr.TD7.WD@BITR@WS.M', medecoLabel:'TD7 NSEA', medecoColor:'#67e8f9', medecoUnit:'WS'
+  },
+  'medeco-td25': {
+    title:'TD25 — CLEAN TANKER (WS)', meta:'Source: Medeco · fr.TD25.WD@BITR@WS.M',
+    medeco:'fr.TD25.WD@BITR@WS.M', medecoLabel:'TD25', medecoColor:'#22d3ee', medecoUnit:'WS'
+  },
+
 };
 
 function axScale(){
@@ -2583,8 +3011,65 @@ async function buildMedecoChart(_ignored, conf){
   const fromDate = new Date(); fromDate.setFullYear(fromDate.getFullYear()-1);
   const fmt      = d => d.toISOString().slice(0, 10);
 
+  // Helper: fetch one serie and return chartData array [{x,y}]
+  async function fetchSerie(serie){
+    const url = `${MEDECO_BASE}/values?serie=${encodeURIComponent(serie)}&from=${fmt(fromDate)}&to=${fmt(toDate)}`;
+    console.log('[MEDECO] Fetching:', url);
+    const resp = await fetch(url, { signal: AbortSignal.timeout(20000) });
+    if(!resp.ok) {
+      let detail = '';
+      try { const j = await resp.json(); detail = j.detail || j.error || ''; } catch(e2){}
+      throw new Error(`HTTP ${resp.status} on ${serie}${detail ? ' — '+detail : ''}`);
+    }
+    const json = await resp.json();
+    // Try chartData first, fallback to raw values[]
+    let pts = json.chartData || [];
+    if(!pts.length && json.values && json.values.length){
+      pts = json.values
+        .map(v => ({ x: String(v.date), y: parseFloat(v.value) }))
+        .filter(p => !isNaN(p.y));
+    }
+    if(!pts.length) throw new Error(`Empty data from Medeco for: ${serie}`);
+    console.log(`[MEDECO] ${serie}: ${pts.length} points`);
+    return pts;
+  }
+
   try {
-    const url = `${MEDECO_BASE}/series/${encodeURIComponent(conf.medeco)}/values?from=${fmt(fromDate)}&to=${fmt(toDate)}`;
+    if(conf.crack){
+      // ── CRACK SPREAD MODE: fetch A and B, align dates, compute A/divA - B/divB ──
+      console.log(`[MEDECO] Crack: ${conf.medecoA} / ${conf.divisorA}  -  ${conf.medecoB}`);
+      const [ptsA, ptsB] = await Promise.all([
+        fetchSerie(conf.medecoA),
+        fetchSerie(conf.medecoB),
+      ]);
+      // Build lookup map for B by date
+      const mapB = {};
+      ptsB.forEach(p => { mapB[p.x] = p.y; });
+      // Compute spread only on dates present in both series
+      const crackData = [];
+      ptsA.forEach(p => {
+        const bVal = mapB[p.x];
+        if(bVal == null) return;
+        const spread = (p.y / (conf.divisorA || 1)) - (bVal / (conf.divisorB || 1));
+        if(!isNaN(spread)) crackData.push({ x: p.x, y: +spread.toFixed(4) });
+      });
+      if(!crackData.length) throw new Error('No overlapping dates between the two series');
+      // Build a "latest" object for the subtitle
+      const last  = crackData[crackData.length - 1];
+      const prev  = crackData.length > 1 ? crackData[crackData.length - 2] : null;
+      const chg   = prev ? last.y - prev.y : 0;
+      const pct   = prev ? chg / Math.abs(prev.y) * 100 : 0;
+      const latest = {
+        value: last.y, date: last.x,
+        change: chg, changePct: pct,
+        direction: chg >= 0 ? 'up' : 'dn',
+      };
+      renderChart(crackData, latest);
+      return;
+    }
+
+    // ── SIMPLE SERIE MODE ──────────────────────────────────────────
+    const url = `${MEDECO_BASE}/values?serie=${encodeURIComponent(conf.medeco)}&from=${fmt(fromDate)}&to=${fmt(toDate)}`;
     console.log('[MEDECO] Fetching:', url);
 
     const resp = await fetch(url, { signal: AbortSignal.timeout(15000) });
@@ -2595,7 +3080,6 @@ async function buildMedecoChart(_ignored, conf){
 
     const chartData = json.chartData || [];
     if(!chartData.length){
-      // Try raw values as fallback
       const raw = json.values || [];
       if(raw.length){
         const fallbackData = raw.map(v => ({ x: String(v.date), y: parseFloat(v.value) })).filter(p => !isNaN(p.y));
@@ -2609,12 +3093,20 @@ async function buildMedecoChart(_ignored, conf){
 
   } catch(e){
     console.error('[MEDECO] buildMedecoChart error:', e);
+    const is403  = e.message.includes('403');
+    const serie  = conf.medeco || conf.medecoA || currentChartKey || '';
+    const hint   = is403
+      ? '⛔ Accès refusé (403) — droits manquants dans Medeco. Contacte l\'équipe Medeco.'
+      : e.message;
+    const serieDisplay = conf.crack
+      ? `A: ${conf.medecoA}<br>B: ${conf.medecoB}`
+      : serie;
     av.innerHTML = `
-      <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
-        <div style="font-size:20px">⚠️</div>
-        <div style="font-size:11px;color:var(--accent2)">Erreur chargement Medeco</div>
-        <div style="font-size:10px;color:var(--dim);max-width:420px;text-align:center;line-height:1.7">${e.message}</div>
-        <div style="font-size:9px;color:var(--dim);border:1px solid var(--border);padding:4px 10px">${conf.medeco}</div>
+      <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px">
+        <div style="font-size:28px">${is403 ? '🔒' : '⚠️'}</div>
+        <div style="font-size:11px;color:var(--accent2);letter-spacing:.12em">${is403 ? 'ACCÈS REFUSÉ — MEDECO 403' : 'ERREUR MEDECO'}</div>
+        <div style="font-size:10px;color:var(--dim);max-width:480px;text-align:center;line-height:1.8">${hint}</div>
+        <div style="font-size:8px;color:var(--dim);border:1px solid var(--border);padding:6px 12px;font-family:monospace;text-align:left;max-width:480px;word-break:break-all">${serieDisplay}</div>
         <button onclick="buildMedecoChart(null, CHART_CONFIGS['${currentChartKey}'])"
           style="margin-top:6px;padding:5px 16px;border:1px solid ${color};background:transparent;color:${color};
                  font-family:inherit;font-size:10px;cursor:pointer;letter-spacing:.1em">
@@ -3490,6 +3982,36 @@ const PRODUCT_MODES = {
     }
   },
 
+  shipping: {
+    label:'SHIPPING', color:'#34d399',
+    countries: {
+      "Rotterdam (ARA)": { coords:[51.9,4.4], group:"western", prod:0, exp:0, imp:0,
+        grades:[
+          {n:"TD7 — NSea Aframax", diff:"Baltic benchmark (WS)", out:0},
+          {n:"MR tanker ARA",      diff:"Clean product rates",   out:0},
+        ],
+        flows:[{d:"US East Coast",c:[40,-74],v:"MR arb",t:"western"},{d:"West Africa",c:[5,3],v:"Aframax",t:"other"}],
+        tankers:[]
+      },
+      "Fujairah (ME Gulf)": { coords:[25.1,56.3], group:"opec", prod:0, exp:0, imp:0,
+        grades:[
+          {n:"TD25 — ME→China VLCC", diff:"Baltic WS benchmark", out:0},
+          {n:"ME Gulf Suezmax",       diff:"MEG→India rates",     out:0},
+        ],
+        flows:[{d:"China",c:[35,105],v:"VLCC",t:"opec"},{d:"Singapore",c:[1.3,103.8],v:"LR2",t:"opec"}],
+        tankers:[]
+      },
+      "Singapore": { coords:[1.3,103.8], group:"other", prod:0, exp:0, imp:0,
+        grades:[
+          {n:"Singapore Bunker Hub", diff:"World's #1 bunker port", out:0},
+          {n:"LR1/LR2 spot rates",   diff:"Pacific clean rates",    out:0},
+        ],
+        flows:[{d:"Japan/Korea",c:[35,130],v:"LR1/LR2",t:"other"},{d:"Australia",c:[-25,135],v:"MR",t:"other"}],
+        tankers:[]
+      },
+    }
+  },
+
   fuel: {
     label:'FUEL OIL', color:'#94a3b8',
     countries: {
@@ -3583,16 +4105,26 @@ function setProductMode(mode) {
 
   showView('map');
 
-  // Show Medeco crude pills only in crude mode
-  const crudePills = document.getElementById('medeco-crude-pills');
-  const medecoSep  = document.getElementById('medeco-pills-sep');
-  const medecoLbl  = document.getElementById('medeco-pills-label');
-  if (crudePills) {
-    const show = (mode === 'crude');
-    crudePills.style.display  = show ? 'contents' : 'none';
-    if (medecoSep) medecoSep.style.display  = show ? '' : 'none';
-    if (medecoLbl) medecoLbl.style.display  = show ? '' : 'none';
-  }
+  // Show Medeco pills per mode
+  const medecoSep = document.getElementById('medeco-pills-sep');
+  const medecoLbl = document.getElementById('medeco-pills-label');
+  const pillGroups = {
+    crude:    document.getElementById('medeco-crude-pills'),
+    distillat:document.getElementById('medeco-dist-pills'),
+    lng:      document.getElementById('medeco-lng-pills'),
+    gasoline: document.getElementById('medeco-gas-pills'),
+    fuel:     document.getElementById('medeco-fuel-pills'),
+    shipping: document.getElementById('medeco-shipping-pills'),
+  };
+  let anyVisible = false;
+  Object.entries(pillGroups).forEach(([m, el]) => {
+    if (!el) return;
+    const show = (m === mode);
+    el.style.display = show ? 'contents' : 'none';
+    if (show) anyVisible = true;
+  });
+  if (medecoSep) medecoSep.style.display = anyVisible ? '' : 'none';
+  if (medecoLbl) medecoLbl.style.display = anyVisible ? '' : 'none';
 }
 
 function selectProductLocation(name, d) {
@@ -4893,6 +5425,34 @@ if(MEDECO_BASE) {
   console.log('%c[MEDECO] Non configuré (MEDECO_BASE = null) — les onglets 📡 afficheront les instructions', 'color:#58677a');
 }
 
+
+/* ═══ DROPDOWN MENUS ═══════════════════════════════════════════ */
+function toggleDropdown(id) {
+  const dd = document.getElementById(id);
+  const menu = document.getElementById(id + '-menu');
+  const btn  = dd.querySelector('.pill-dropdown-btn');
+  const isOpen = menu.classList.contains('open');
+  closeDropdowns();
+  if (!isOpen) {
+    // Position the menu using fixed coords from the button's screen position
+    const rect = btn.getBoundingClientRect();
+    menu.style.top  = (rect.bottom + 4) + 'px';
+    menu.style.left = rect.left + 'px';
+    menu.classList.add('open');
+    btn.classList.add('open');
+  }
+}
+
+function closeDropdowns() {
+  document.querySelectorAll('.pill-dropdown-menu').forEach(m => m.classList.remove('open'));
+  document.querySelectorAll('.pill-dropdown-btn').forEach(b => b.classList.remove('open'));
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.pill-dropdown')) closeDropdowns();
+});
+
 // Init storage saved URLs
 _initStorageUrls();
 
@@ -5045,7 +5605,7 @@ if(window.innerWidth <= 768) {
 </div>
 
 <!-- ═══ STORAGE OVERLAY ══════════════════════════════════════════ -->
-<div id="storage-overlay" class="overlay overlay-hidden" style="flex-direction:column;overflow:hidden;">
+<div id="storage-overlay" class="overlay overlay-hidden" style="flex-direction:column;overflow:hidden;position:fixed;inset:0;z-index:3000;">
 
   <!-- Top bar -->
   <div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:48px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--panel)">
@@ -5064,28 +5624,55 @@ if(window.innerWidth <= 768) {
   </div>
 
   <!-- Content area -->
-  <div id="storage-content" style="flex:1;position:relative;overflow:hidden;">
+  <div id="storage-content" style="flex:1;position:relative;overflow:hidden;min-height:0;">
 
     <!-- CRUDE — PowerBI link card -->
-    <div id="storage-pane-crude" class="storage-pane" style="position:absolute;inset:0;">
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:20px">
-        <div style="font-size:56px;opacity:.15">📊</div>
-        <div style="text-align:center">
-          <div style="font-size:13px;letter-spacing:.2em;color:#63b3ed;margin-bottom:6px">CRUDE STORAGE — POWER BI</div>
-          <div style="font-size:10px;color:var(--dim);margin-bottom:24px;opacity:.7">PowerBI reports cannot be embedded due to Microsoft security policy.<br>Click below to open the report in a new tab.</div>
-          <a href="https://app.powerbi.com/groups/me/reports/79225e7a-59b7-476d-a772-2997966f9123/a71df5dd319378e0642b?ctid=329e91b0-e21f-48fb-a071-456717ecc28e&experience=power-bi"
-             target="_blank" rel="noopener"
-             style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;
-                    border:1px solid #63b3ed;background:rgba(99,179,237,.08);
-                    color:#63b3ed;font-family:inherit;font-size:11px;letter-spacing:.15em;
-                    text-decoration:none;transition:all .2s"
-             onmouseover="this.style.background='rgba(99,179,237,.18)'"
-             onmouseout="this.style.background='rgba(99,179,237,.08)'">
-            📊 &nbsp;OPEN CRUDE STORAGE REPORT ↗
-          </a>
+    <div id="storage-pane-crude" class="storage-pane" style="position:absolute;inset:0;display:flex;flex-direction:column;">
+
+      <!-- Top bar: titre + bouton open in new tab -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;flex-shrink:0;border-bottom:1px solid var(--border);background:rgba(99,179,237,.04)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:10px;letter-spacing:.18em;color:#63b3ed">📊 CRUDE STORAGE — POWER BI</span>
+          <span id="pbi-crude-status" style="font-size:8px;letter-spacing:.1em;color:var(--dim)">● loading…</span>
         </div>
-        <div style="font-size:9px;color:var(--dim);opacity:.4;margin-top:8px">Make sure you are logged in to your Microsoft/TGS account</div>
+        <a id="pbi-crude-link"
+           href="https://app.powerbi.com/reportEmbed?reportId=79225e7a-59b7-476d-a772-2997966f9123&autoAuth=true&ctid=329e91b0-e21f-48fb-a071-456717ecc28e"
+           target="_blank" rel="noopener"
+           style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;
+                  border:1px solid rgba(99,179,237,.4);background:rgba(99,179,237,.06);
+                  color:#63b3ed;font-size:9px;letter-spacing:.12em;text-decoration:none;transition:all .15s"
+           onmouseover="this.style.background='rgba(99,179,237,.16)'"
+           onmouseout="this.style.background='rgba(99,179,237,.06)'">
+          OPEN IN NEW TAB ↗
+        </a>
       </div>
+
+      <!-- PowerBI iframe -->
+      <div style="flex:1;position:relative;overflow:hidden;min-height:0;height:100%;">
+        <iframe
+          id="pbi-crude-iframe"
+          src="https://app.powerbi.com/reportEmbed?reportId=79225e7a-59b7-476d-a772-2997966f9123&autoAuth=true&ctid=329e91b0-e21f-48fb-a071-456717ecc28e"
+          style="position:absolute;inset:0;width:100%;height:100%;border:none;display:block;"
+          allowfullscreen
+          onload="document.getElementById('pbi-crude-status').textContent='● connected';document.getElementById('pbi-crude-status').style.color='var(--green)'"
+          onerror="document.getElementById('pbi-crude-status').textContent='● blocked — use ↗ button';document.getElementById('pbi-crude-status').style.color='var(--accent2)'"
+        ></iframe>
+
+        <!-- Fallback overlay — shown if iframe is blocked (X-Frame-Options) -->
+        <div id="pbi-crude-fallback" style="display:none;position:absolute;inset:0;
+          flex-direction:column;align-items:center;justify-content:center;gap:18px;
+          background:var(--bg);pointer-events:none">
+          <div style="font-size:40px;opacity:.2">📊</div>
+          <div style="text-align:center">
+            <div style="font-size:11px;color:#63b3ed;letter-spacing:.15em;margin-bottom:8px">EMBED BLOCKED BY MICROSOFT</div>
+            <div style="font-size:10px;color:var(--dim);line-height:1.8;margin-bottom:20px">
+              Your Power BI tenant policy may restrict iframe embedding.<br>
+              Use the button above to open the report directly.
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- DISTILLAT — placeholder -->
