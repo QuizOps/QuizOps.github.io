@@ -629,6 +629,8 @@ body {
 }
 .storage-tab:hover { border-color: #63b3ed; color: #63b3ed; }
 .storage-tab.active { border-color: #63b3ed; color: #63b3ed; background: rgba(99,179,237,.08); }
+/* Storage panes — hidden by default, shown by switchStorageTab */
+.storage-pane { display: none; position: absolute; inset: 0; }
 
 /* ── Show bottom tab bar + mob charts only on mobile ── */
 #mob-tab-bar { display: none; }
@@ -3659,10 +3661,13 @@ function switchStorageTab(mode) {
   document.querySelectorAll('.storage-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.mode === mode);
   });
-  // Show correct pane
+  // Show correct pane — crude uses flex layout, others use block
   document.querySelectorAll('.storage-pane').forEach(p => p.style.display = 'none');
   const pane = document.getElementById('storage-pane-' + mode);
-  if(pane) pane.style.display = 'block';
+  if(pane){
+    // Preserve the original display type (flex for crude, block for others)
+    pane.style.display = pane.dataset.displayType || 'flex';
+  }
 }
 
 function setStorageUrl(mode, url) {
@@ -4688,9 +4693,38 @@ function buildSystemPrompt(ctx) {
     }
   }
 
+  // ── Refinery knowledge (condensed IFP reference) ──────────────
+  lines.push('## Refinery Process Knowledge (IFP Training reference):');
+  lines.push('DISTILLATION: ADU furnace 385°C, 25-35 trays. Cuts: Naphtha <145°C, Kero 145-240°C, LGO 220-300°C, HGO 300-360°C, AtmRes >360°C. VDU: 15-80 mbar vacuum, extracts VGO 380-560°C without cracking.');
+  lines.push('TREATING: HDT removes S/N/metals via H2+CoMo/NiMo catalysts 300-380°C 30-70bar. Merox sweetens LPG/Kero (caustic+air). Reforming: Pt-Re/Al2O3 490-530°C 10-30bar, RON 95-102, produces H2+aromatics.');
+  lines.push('CONVERSION: FCC 500-530°C fluid cat cracking VGO→gasoline(50%)+LCO+gas. HDC 350-420°C 100-180bar hydrocracking VGO→diesel/jet. Visbreaking 440-480°C mild thermal, reduces FO viscosity. Coking 480-510°C severe, produces coke+naphtha+gasoil.');
+  lines.push('PRODUCTS SPECS: Gasoline RON95/98 S<10ppm vapor pressure 45-60kPa. Diesel EN590 S<10ppm CN≥51 CFPP-5°C. Jet A-1 S<3000ppm FP>38°C freez<-47°C. VLSFO 0.5%S IMO2020. HSFO 3.5%S. LPG C3/C4 mix.');
+  lines.push('KEY RATIOS: Nelson complexity index measures refinery upgrading. 3-2-1 crack spread = (2×gasoline + 1×diesel - 3×crude)/3. VLSFO crack = VLSFO - Brent/6.35. Diesel crack = Gasoil/7.46 - Brent.');
+  lines.push('');
+
+  // If user is currently viewing a specific refinery unit, inject its full data
+  if (typeof RF_CUR !== 'undefined' && typeof RFD !== 'undefined' && RFD[RF_CUR]) {
+    const unit = RFD[RF_CUR];
+    // Strip HTML tags for clean text
+    const cleanBody = (unit.b || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g,' ').trim().slice(0, 800);
+    lines.push(`## Currently Viewed Refinery Unit: ${unit.t}`);
+    lines.push(`Summary: ${unit.s}`);
+    lines.push(`Detail: ${cleanBody}`);
+    lines.push('');
+  }
+
+  // Crude grades knowledge from Platts periodic table
+  lines.push('## Crude Grade Reference (S&P Global Platts):');
+  lines.push('Light Sweet (<0.5%S, API>34): Brent DTD API37.5 S0.40, WTI API40.8 S0.42, Forties API37.3 S0.54, Ekofisk API38.5 S0.19, Oseberg API39.6 S0.20, LLS API41.1 S0.40, Saharan API43.2 S0.13');
+  lines.push('Medium Sour (0.5-2%S, API25-34): Arab Light API34.2 S1.96, Urals API31.7 S1.70, Kirkuk API34.2 S2.24, Dubai API30.4 S2.13, Oman API34 S1.09, Murban API40.2 S0.79');
+  lines.push('Heavy Sour (>2%S, API<28): Arab Heavy API27.8 S2.75, Basra Heavy API24 S4.05, Maya API21.8 S3.33, WCS API20.9 S3.59, Johan Sverdrup API28.7 S0.81');
+  lines.push('');
+
   lines.push('Instructions:');
   lines.push('- Always reference exact numbers and dates from the data above.');
   lines.push('- Identify trends across the weekly series, not just the last point.');
+  lines.push('- If asked about refinery processes, use the IFP knowledge above.');
+  lines.push('- If asked about crude grades, reference the Platts data above.');
   lines.push('- If asked to summarize news, use the Live Market Headlines above.');
   lines.push('- If Medeco prices are missing, suggest the user open a Medeco chart first.');
   return lines.join('\n');
@@ -5426,6 +5460,41 @@ if(MEDECO_BASE) {
 }
 
 
+/* ═══ CRUDE STORAGE SUB-TABS (PBI / EXCEL) ═══════════════════ */
+const CRUDE_SUB_LINKS = {
+  pbi: 'https://app.powerbi.com/reportEmbed?reportId=79225e7a-59b7-476d-a772-2997966f9123&autoAuth=true&ctid=329e91b0-e21f-48fb-a071-456717ecc28e',
+  xls: 'https://fit-services.dts.corp.local/crude_ops/',
+};
+
+function switchCrudeSub(sub) {
+  const pbiBtn  = document.getElementById('crude-sub-pbi');
+  const xlsBtn  = document.getElementById('crude-sub-xls');
+  const pbiFrame = document.getElementById('crude-iframe-pbi');
+  const xlsFrame = document.getElementById('crude-iframe-xls');
+  const status  = document.getElementById('crude-sub-status');
+  const link    = document.getElementById('crude-sub-link');
+  if(!pbiBtn || !xlsBtn) return;
+
+  // Reset buttons
+  pbiBtn.style.borderBottomColor = 'transparent';
+  pbiBtn.style.color = 'var(--dim)';
+  xlsBtn.style.borderBottomColor = 'transparent';
+  xlsBtn.style.color = 'var(--dim)';
+
+  // Activate selected
+  const activeBtn = sub === 'pbi' ? pbiBtn : xlsBtn;
+  activeBtn.style.borderBottomColor = '#63b3ed';
+  activeBtn.style.color = '#63b3ed';
+
+  // Show/hide iframes
+  if(pbiFrame) pbiFrame.style.display  = sub === 'pbi' ? 'block' : 'none';
+  if(xlsFrame) xlsFrame.style.display  = sub === 'xls' ? 'block' : 'none';
+
+  // Update link + status
+  if(link) link.href = CRUDE_SUB_LINKS[sub] || '#';
+  if(status) { status.textContent = '● loading…'; status.style.color = 'var(--dim)'; }
+}
+
 /* ═══ DROPDOWN MENUS ═══════════════════════════════════════════ */
 function toggleDropdown(id) {
   const dd = document.getElementById(id);
@@ -5627,50 +5696,59 @@ if(window.innerWidth <= 768) {
   <div id="storage-content" style="flex:1;position:relative;overflow:hidden;min-height:0;">
 
     <!-- CRUDE — PowerBI link card -->
-    <div id="storage-pane-crude" class="storage-pane" style="position:absolute;inset:0;display:flex;flex-direction:column;">
+    <div id="storage-pane-crude" class="storage-pane" data-display-type="flex" style="position:absolute;inset:0;display:flex;flex-direction:column;">
 
-      <!-- Top bar: titre + bouton open in new tab -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;flex-shrink:0;border-bottom:1px solid var(--border);background:rgba(99,179,237,.04)">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:10px;letter-spacing:.18em;color:#63b3ed">📊 CRUDE STORAGE — POWER BI</span>
-          <span id="pbi-crude-status" style="font-size:8px;letter-spacing:.1em;color:var(--dim)">● loading…</span>
+      <!-- Sub-tab bar: PBI | EXCEL -->
+      <div style="display:flex;align-items:stretch;justify-content:space-between;padding:0 16px;height:38px;flex-shrink:0;border-bottom:1px solid var(--border);background:rgba(99,179,237,.03)">
+        <div style="display:flex;align-items:stretch;gap:0">
+          <button id="crude-sub-pbi"
+            onclick="switchCrudeSub('pbi')"
+            style="padding:0 16px;font-size:9px;letter-spacing:.12em;border:none;border-bottom:2px solid #63b3ed;
+                   background:transparent;color:#63b3ed;cursor:pointer;font-family:inherit;transition:all .15s">
+            📊 POWER BI
+          </button>
+          <button id="crude-sub-xls"
+            onclick="switchCrudeSub('xls')"
+            style="padding:0 16px;font-size:9px;letter-spacing:.12em;border:none;border-bottom:2px solid transparent;
+                   background:transparent;color:var(--dim);cursor:pointer;font-family:inherit;transition:all .15s">
+            📈 STREAMLIT
+          </button>
         </div>
-        <a id="pbi-crude-link"
-           href="https://app.powerbi.com/reportEmbed?reportId=79225e7a-59b7-476d-a772-2997966f9123&autoAuth=true&ctid=329e91b0-e21f-48fb-a071-456717ecc28e"
-           target="_blank" rel="noopener"
-           style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;
-                  border:1px solid rgba(99,179,237,.4);background:rgba(99,179,237,.06);
-                  color:#63b3ed;font-size:9px;letter-spacing:.12em;text-decoration:none;transition:all .15s"
-           onmouseover="this.style.background='rgba(99,179,237,.16)'"
-           onmouseout="this.style.background='rgba(99,179,237,.06)'">
-          OPEN IN NEW TAB ↗
-        </a>
+        <!-- Status + open link (dynamic) -->
+        <div style="display:flex;align-items:center;gap:10px">
+          <span id="crude-sub-status" style="font-size:8px;letter-spacing:.1em;color:var(--dim)">● loading…</span>
+          <a id="crude-sub-link"
+             href="https://app.powerbi.com/reportEmbed?reportId=79225e7a-59b7-476d-a772-2997966f9123&autoAuth=true&ctid=329e91b0-e21f-48fb-a071-456717ecc28e"
+             target="_blank" rel="noopener"
+             style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;
+                    border:1px solid rgba(99,179,237,.4);background:rgba(99,179,237,.06);
+                    color:#63b3ed;font-size:9px;letter-spacing:.12em;text-decoration:none;transition:all .15s"
+             onmouseover="this.style.background='rgba(99,179,237,.16)'"
+             onmouseout="this.style.background='rgba(99,179,237,.06)'">
+            OPEN ↗
+          </a>
+        </div>
       </div>
 
-      <!-- PowerBI iframe -->
-      <div style="flex:1;position:relative;overflow:hidden;min-height:0;height:100%;">
-        <iframe
-          id="pbi-crude-iframe"
+      <!-- iframe container — swaps between PBI and Excel -->
+      <div style="flex:1;position:relative;overflow:hidden;min-height:0;">
+
+        <!-- Power BI iframe -->
+        <iframe id="crude-iframe-pbi"
           src="https://app.powerbi.com/reportEmbed?reportId=79225e7a-59b7-476d-a772-2997966f9123&autoAuth=true&ctid=329e91b0-e21f-48fb-a071-456717ecc28e"
           style="position:absolute;inset:0;width:100%;height:100%;border:none;display:block;"
           allowfullscreen
-          onload="document.getElementById('pbi-crude-status').textContent='● connected';document.getElementById('pbi-crude-status').style.color='var(--green)'"
-          onerror="document.getElementById('pbi-crude-status').textContent='● blocked — use ↗ button';document.getElementById('pbi-crude-status').style.color='var(--accent2)'"
-        ></iframe>
+          onload="document.getElementById('crude-sub-status').textContent='● connected';document.getElementById('crude-sub-status').style.color='var(--green)';"
+        ></iframe></iframe>
 
-        <!-- Fallback overlay — shown if iframe is blocked (X-Frame-Options) -->
-        <div id="pbi-crude-fallback" style="display:none;position:absolute;inset:0;
-          flex-direction:column;align-items:center;justify-content:center;gap:18px;
-          background:var(--bg);pointer-events:none">
-          <div style="font-size:40px;opacity:.2">📊</div>
-          <div style="text-align:center">
-            <div style="font-size:11px;color:#63b3ed;letter-spacing:.15em;margin-bottom:8px">EMBED BLOCKED BY MICROSOFT</div>
-            <div style="font-size:10px;color:var(--dim);line-height:1.8;margin-bottom:20px">
-              Your Power BI tenant policy may restrict iframe embedding.<br>
-              Use the button above to open the report directly.
-            </div>
-          </div>
-        </div>
+        <!-- Excel iframe (hidden by default) -->
+        <iframe id="crude-iframe-xls"
+          src="https://fit-services.dts.corp.local/crude_ops/"
+          style="position:absolute;inset:0;width:100%;height:100%;border:none;display:none;"
+          allowfullscreen
+          onload="document.getElementById('crude-sub-status').textContent='● connected';document.getElementById('crude-sub-status').style.color='var(--green)';"
+        ></iframe></iframe>
+
       </div>
 
     </div>
