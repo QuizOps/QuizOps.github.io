@@ -3206,17 +3206,12 @@ const RSS_FEEDS = [
    cat:'OFFICIAL'},
   {name:'IEA News',    url:'https://www.iea.org/news/rss',
    cat:'OFFICIAL'},
-  {name:'IEA Reports', url:'https://www.iea.org/reports/rss',
-   cat:'OFFICIAL'},
+
   {name:'OPEC',        url:'https://www.opec.org/opec_web/en/press_room/rss.htm',
    cat:'OFFICIAL'},
 
   // ── Finance & commodités ───────────────────────────────────────
   {name:'Reuters',     url:'https://feeds.reuters.com/reuters/commoditiesNews',
-   cat:'FINANCE'},
-  {name:'MarketWatch', url:'https://feeds.marketwatch.com/marketwatch/marketpulse/',
-   cat:'FINANCE'},
-  {name:'Investing',   url:'https://www.investing.com/rss/news_285.rss',
    cat:'FINANCE'},
 
   // ── Offshore & technique ───────────────────────────────────────
@@ -3288,7 +3283,7 @@ function renderNewsItem(item){
    Proxies tried in order: rss2json → allorigins → corsproxy.io
    LocalStorage cache: 5min TTL, survives page reloads
 ═══════════════════════════════════════════════════════════════ */
-const RSS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const RSS_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
 function _rssMapItem(it, feedDef, source='json') {
   const pub  = source === 'json' ? it.pubDate : it.querySelector('pubDate')?.textContent;
@@ -3312,112 +3307,101 @@ function _rssMapItem(it, feedDef, source='json') {
   };
 }
 
-async function _tryLocalProxy(feedDef) {
-  // Local Medeco proxy — most reliable, no whitelist, works from GitHub Pages
-  // Requires medeco_proxy.py running on localhost:8765
-  const url = `http://localhost:8765/rss/fetch?url=${encodeURIComponent(feedDef.url)}`;
-  const r = await fetch(url, {signal: AbortSignal.timeout(8000)});
-  if(!r.ok) throw new Error('local proxy HTTP '+r.status);
-  const text = await r.text();
-  const xml = new DOMParser().parseFromString(text, 'application/xml');
-  const items = [...xml.querySelectorAll('item')].slice(0,15);
-  if(!items.length) throw new Error('local proxy no items');
+async function _tryAllOriginsGet(feedDef) {
+  // allorigins /get — JSON wrapper, most reliable from GitHub Pages
+  const url = `https://api.allorigins.win/get?url=${encodeURIComponent(feedDef.url)}`;
+  const r   = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if (!r.ok) throw new Error('allorigins/get ' + r.status);
+  const j    = await r.json();
+  const text = j.contents || '';
+  if (!text) throw new Error('allorigins/get empty');
+  const xml   = new DOMParser().parseFromString(text, 'application/xml');
+  const items = [...xml.querySelectorAll('item')].slice(0, 15);
+  if (!items.length) throw new Error('allorigins/get no items');
+  return items.map(it => _rssMapItem(it, feedDef, 'xml'));
+}
+
+async function _tryAllOriginsRaw(feedDef) {
+  // allorigins /raw — direct response, faster when it works
+  const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(feedDef.url)}`;
+  const r   = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if (!r.ok) throw new Error('allorigins/raw ' + r.status);
+  const text  = await r.text();
+  const xml   = new DOMParser().parseFromString(text, 'application/xml');
+  const items = [...xml.querySelectorAll('item')].slice(0, 15);
+  if (!items.length) throw new Error('allorigins/raw no items');
   return items.map(it => _rssMapItem(it, feedDef, 'xml'));
 }
 
 async function _tryRss2json(feedDef) {
-  // rss2json — free tier limited, 422 = feed not in whitelist
-  const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedDef.url)}&count=15`;
-  const r = await fetch(api, {signal: AbortSignal.timeout(6000)});
-  if(!r.ok) throw new Error('rss2json HTTP '+r.status);
-  const j = await r.json();
-  if(j.status !== 'ok' || !j.items?.length) throw new Error('rss2json no items');
+  // rss2json — free tier, works for feeds in their whitelist
+  const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedDef.url)}&count=15`;
+  const r   = await fetch(url, { signal: AbortSignal.timeout(6000) });
+  if (!r.ok) throw new Error('rss2json ' + r.status);
+  const j   = await r.json();
+  if (j.status !== 'ok' || !j.items?.length) throw new Error('rss2json: ' + (j.message || 'no items'));
   return j.items.map(it => _rssMapItem(it, feedDef, 'json'));
 }
 
-async function _tryAllOrigins(feedDef) {
-  // allorigins /get returns JSON wrapper — more reliable than /raw
-  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(feedDef.url)}`;
-  const r = await fetch(proxy, {signal: AbortSignal.timeout(7000)});
-  if(!r.ok) throw new Error('allorigins HTTP '+r.status);
-  const j = await r.json();
-  const text = j.contents || '';
-  if(!text) throw new Error('allorigins empty');
-  const xml = new DOMParser().parseFromString(text, 'application/xml');
-  const items = [...xml.querySelectorAll('item')].slice(0,12);
-  if(!items.length) throw new Error('allorigins no items');
+async function _tryCorsProxyIo(feedDef) {
+  // corsproxy.io — last resort
+  const url = `https://corsproxy.io/?url=${encodeURIComponent(feedDef.url)}`;
+  const r   = await fetch(url, { signal: AbortSignal.timeout(7000) });
+  if (!r.ok) throw new Error('corsproxy.io ' + r.status);
+  const text  = await r.text();
+  const xml   = new DOMParser().parseFromString(text, 'application/xml');
+  const items = [...xml.querySelectorAll('item')].slice(0, 15);
+  if (!items.length) throw new Error('corsproxy.io no items');
   return items.map(it => _rssMapItem(it, feedDef, 'xml'));
 }
 
-async function _tryCorsProxy(feedDef) {
-  // Third fallback: cors.sh proxy
-  const proxy = `https://proxy.cors.sh/${feedDef.url}`;
-  const r = await fetch(proxy, {
-    signal: AbortSignal.timeout(7000),
-    headers: {'x-cors-api-key': 'temp_...'}
-  });
-  if(!r.ok) throw new Error('cors.sh HTTP '+r.status);
-  const text = await r.text();
-  const xml = new DOMParser().parseFromString(text, 'application/xml');
-  const items = [...xml.querySelectorAll('item')].slice(0,12);
-  if(!items.length) throw new Error('cors.sh no items');
+async function _tryLocalProxy(feedDef) {
+  // Local Medeco proxy — only works when medeco_proxy.py is running
+  const url = `http://localhost:8765/rss/fetch?url=${encodeURIComponent(feedDef.url)}`;
+  const r   = await fetch(url, { signal: AbortSignal.timeout(4000) });
+  if (!r.ok) throw new Error('local proxy ' + r.status);
+  const text  = await r.text();
+  const xml   = new DOMParser().parseFromString(text, 'application/xml');
+  const items = [...xml.querySelectorAll('item')].slice(0, 15);
+  if (!items.length) throw new Error('local proxy no items');
   return items.map(it => _rssMapItem(it, feedDef, 'xml'));
-}
-
-async function parseFeed(feedDef) {
-  // 1. Check localStorage cache first
-  const cacheKey = 'rss_' + feedDef.name;
-  try {
-    const cached = localStorage.getItem(cacheKey);
-    if(cached) {
-      const {ts, items} = JSON.parse(cached);
-      if(Date.now() - ts < RSS_CACHE_TTL && items?.length) {
-        // Return cached immediately, but schedule background refresh
-        _scheduleBgRefresh(feedDef, cacheKey);
-        return items;
-      }
-    }
-  } catch(e) {}
-
-  // 2. Try proxies in sequence
-  return await _fetchWithFallback(feedDef, cacheKey);
-}
-
-// Track ongoing bg refreshes to avoid duplicate fetches
-const _bgRefreshPending = new Set();
-
-function _scheduleBgRefresh(feedDef, cacheKey) {
-  if(_bgRefreshPending.has(feedDef.name)) return;
-  const cached = localStorage.getItem(cacheKey);
-  if(cached) {
-    const {ts} = JSON.parse(cached);
-    const age = Date.now() - ts;
-    if(age < RSS_CACHE_TTL * 0.5) return; // still fresh enough, skip
-  }
-  _bgRefreshPending.add(feedDef.name);
-  setTimeout(async () => {
-    try {
-      await _fetchWithFallback(feedDef, cacheKey);
-    } finally {
-      _bgRefreshPending.delete(feedDef.name);
-    }
-  }, 100);
 }
 
 async function _fetchWithFallback(feedDef, cacheKey) {
-  const proxies = [_tryLocalProxy, _tryRss2json, _tryAllOrigins, _tryCorsProxy];
-  for(const proxy of proxies) {
+  // Check cache first
+  try {
+    const raw    = localStorage.getItem(cacheKey);
+    const cached = raw ? JSON.parse(raw) : null;
+    if (cached && Date.now() - cached.ts < RSS_CACHE_TTL && cached.items?.length) {
+      return cached.items;
+    }
+  } catch(e) {}
+
+  // Proxy chain — allorigins first (most reliable from GitHub Pages & localhost)
+  // Local proxy included at end for when medeco_proxy.py is running
+  const isHttps  = location.protocol === 'https:';
+  const proxies  = isHttps
+    ? [_tryAllOriginsGet, _tryAllOriginsRaw, _tryRss2json, _tryCorsProxyIo]
+    : [_tryLocalProxy, _tryAllOriginsGet, _tryAllOriginsRaw, _tryRss2json];
+
+  for (const proxy of proxies) {
     try {
       const items = await proxy(feedDef);
-      if(items?.length) {
-        // Cache in localStorage
-        try { localStorage.setItem(cacheKey, JSON.stringify({ts: Date.now(), items})); } catch(e){}
+      if (items?.length) {
+        try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), items })); } catch(e) {}
         return items;
       }
-    } catch(e) { /* try next proxy */ }
+    } catch(e) { /* silent, try next */ }
   }
   return [];
 }
+
+// parseFeed — public wrapper: builds cacheKey and calls _fetchWithFallback
+async function parseFeed(feedDef) {
+  const cacheKey = 'rss_' + feedDef.name;
+  return _fetchWithFallback(feedDef, cacheKey);
+}
+
 
 let newsLoaded = false;
 
