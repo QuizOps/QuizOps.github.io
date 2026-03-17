@@ -736,7 +736,8 @@ body {
         {"proName":"TVC:USOIL","title":"WTI Crude"},
         {"proName":"NYSE:TTE","title":"TotalEnergies"},
         {"proName":"FX:EURUSD","title":"EUR/USD"},
-        {"proName":"FX:EURCHF","title":"EUR/CHF"}
+        {"proName":"FX:EURCHF","title":"EUR/CHF"},
+        {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"}
       ],
       "showSymbolLogo": false,
       "isTransparent": true,
@@ -790,6 +791,42 @@ body {
       <div class="yfw-name">DUBAI</div>
       <div class="yfw-price" id="mw-dubai-price">—</div>
       <div class="yfw-chg"   id="mw-dubai-chg">$/bbl</div>
+    </div>
+
+    <div class="yf-widget" id="mw-bdspread" onclick="showChart('medeco-brent-dub')" title="Brent/Dubai Spread — Medeco live" style="border-left:1px solid #2a3a4a">
+      <div class="yfw-name">B/D SPRD</div>
+      <div class="yfw-price" id="mw-bdspread-price">—</div>
+      <div class="yfw-chg"   id="mw-bdspread-chg">$/bbl</div>
+    </div>
+
+    <div class="yf-widget" id="mw-bwspread" onclick="showChart('medeco-wti-brent')" title="Brent/WTI Spread — Medeco live (Brent − WTI)" style="border-left:1px solid #2a3a4a">
+      <div class="yfw-name">B/W SPRD</div>
+      <div class="yfw-price" id="mw-bwspread-price">—</div>
+      <div class="yfw-chg"   id="mw-bwspread-chg">$/bbl</div>
+    </div>
+
+    <div class="yf-widget" id="mw-distcrk"  onclick="showChart('medeco-diesel-crack')"  title="Distillate Crack vs Brent — Medeco" style="border-left:1px solid #2a3a4a">
+      <div class="yfw-name" style="color:#38bdf8">DIST CRK</div>
+      <div class="yfw-price" id="mw-distcrk-price">—</div>
+      <div class="yfw-chg"   id="mw-distcrk-chg">$/bbl</div>
+    </div>
+
+    <div class="yf-widget" id="mw-naphcrk"  onclick="showChart('medeco-naphtha-crack')" title="Naphtha Crack vs Brent — Medeco" style="border-left:1px solid #2a3a4a">
+      <div class="yfw-name" style="color:#22d3ee">NAPH CRK</div>
+      <div class="yfw-price" id="mw-naphcrk-price">—</div>
+      <div class="yfw-chg"   id="mw-naphcrk-chg">$/bbl</div>
+    </div>
+
+    <div class="yf-widget" id="mw-vlsfocrk" onclick="showChart('medeco-vlsfo-crack')"   title="VLSFO Crack vs Brent — Medeco" style="border-left:1px solid #2a3a4a">
+      <div class="yfw-name" style="color:#fdba74">VLSFO CRK</div>
+      <div class="yfw-price" id="mw-vlsfocrk-price">—</div>
+      <div class="yfw-chg"   id="mw-vlsfocrk-chg">$/bbl</div>
+    </div>
+
+    <div class="yf-widget" id="mw-hsfocrk"  onclick="showChart('medeco-hsfo-crack')"    title="HSFO Crack vs Brent — Medeco" style="border-left:1px solid #2a3a4a">
+      <div class="yfw-name" style="color:#fb923c">HSFO CRK</div>
+      <div class="yfw-price" id="mw-hsfocrk-price">—</div>
+      <div class="yfw-chg"   id="mw-hsfocrk-chg">$/bbl</div>
     </div>
 
     <!-- FED widget — separator + rate -->
@@ -1471,67 +1508,45 @@ const FRED_API_KEY = '30f3e28802f893aa8bc8e9884184bc33';
 const FRED_BASE    = 'https://api.stlouisfed.org/fred';
 
 async function fetchFedRate() {
-  // JSONP approach — bypasses CORS entirely, works from file://, GitHub Pages, anywhere
-  // FRED supports ?callback= for JSONP responses
-  return new Promise((resolve) => {
-    const callbackName = '_fredCb_' + Date.now();
-    const script = document.createElement('script');
-    let settled = false;
+  // Try multiple FRED series in case one is down
+  // DFEDTARU = upper target, DFF = effective daily, FEDFUNDS = monthly effective
+  const series  = ['DFEDTARU', 'DFF', 'FEDFUNDS'];
+  const baseUrl = `https://api.stlouisfed.org/fred/series/observations`
+                + `?api_key=${FRED_API_KEY}&sort_order=desc&limit=5&file_type=json`;
 
-    const cleanup = () => {
-      try { document.head.removeChild(script); } catch(e) {}
-      try { delete window[callbackName]; } catch(e) {}
-    };
+  for (const serie of series) {
+    try {
+      const resp = await fetch(`${baseUrl}&series_id=${serie}`,
+        { signal: AbortSignal.timeout(6000), mode: 'cors' });
+      if (!resp.ok) { console.warn(`[FED] ${serie} HTTP ${resp.status}`); continue; }
+      const j   = await resp.json();
+      const obs = (j.observations || []).filter(o => o.value !== '.' && o.value !== '');
+      if (!obs.length) continue;
+      const latest = obs[0];
+      const prev   = obs.find(o => o.value !== latest.value);
+      const rate   = parseFloat(latest.value);
+      const pRate  = prev ? parseFloat(prev.value) : rate;
+      const chg    = rate - pRate;
+      const chgTxt = chg === 0 ? 'UNCHANGED' : `${chg>0?'+':''}${(chg*100).toFixed(0)}bps`;
+      console.log(`[FED] ✓ ${serie}: ${rate}% as of ${latest.date} (${chgTxt})`);
+      return { rate, date: latest.date, chg, chgTxt, dir: chg>0?'up':chg<0?'dn':'' };
+    } catch(e) {
+      console.warn(`[FED] ${serie} failed:`, e.message);
+    }
+  }
 
-    // Timeout after 8s
-    const timer = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      cleanup();
-      // Fallback: try via local proxy (if medeco_proxy.py running)
-      fetch('http://localhost:8765/fred/rate', { signal: AbortSignal.timeout(3000) })
-        .then(r => r.ok ? r.json() : null)
-        .then(d => resolve(d?.rate ? d : null))
-        .catch(() => resolve(null));
-    }, 8000);
+  // Proxy fallback (when medeco_proxy.py running locally)
+  try {
+    const r = await fetch('http://localhost:8765/fred/rate',
+      { signal: AbortSignal.timeout(3000) });
+    if (r.ok) {
+      const d = await r.json();
+      if (d?.rate) return { rate:d.rate, date:d.date, chg:d.chg, chgTxt:d.chgTxt, dir:d.dir };
+    }
+  } catch(e) { /* proxy not running */ }
 
-    window[callbackName] = (data) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      cleanup();
-      try {
-        const obs = (data.observations || []).filter(o => o.value !== '.' && o.value !== '');
-        if (!obs.length) { resolve(null); return; }
-        const latest = obs[0];
-        const prev   = obs.find(o => o.value !== latest.value);
-        const rate   = parseFloat(latest.value);
-        const pRate  = prev ? parseFloat(prev.value) : rate;
-        const chg    = rate - pRate;
-        const chgTxt = chg === 0 ? 'UNCHANGED' : `${chg>0?'+':''}${(chg*100).toFixed(0)}bps`;
-        console.log(`[FED] ✓ JSONP: ${rate}% as of ${latest.date} (${chgTxt})`);
-        resolve({ rate, date: latest.date, chg, chgTxt, dir: chg>0?'up':chg<0?'dn':'' });
-      } catch(e) {
-        console.warn('[FED] JSONP parse error:', e.message);
-        resolve(null);
-      }
-    };
-
-    const url = `${FRED_BASE}/series/observations`
-              + `?series_id=DFEDTARU&api_key=${FRED_API_KEY}`
-              + `&sort_order=desc&limit=5&file_type=json`
-              + `&callback=${callbackName}`;
-    script.src = url;
-    script.onerror = () => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      cleanup();
-      console.warn('[FED] JSONP script load error');
-      resolve(null);
-    };
-    document.head.appendChild(script);
-  });
+  console.warn('[FED] All sources failed — FRED may be temporarily down (503)');
+  return null;
 }
 
 async function refreshFedWidget() {
@@ -1561,11 +1576,17 @@ let tickerLiveData = {}; // label → {price, chg, dir}
 // ── Medeco header widgets — VGO, VLSFO, HSFO, Distillate, Dubai ─────────────
 // Fetched on page load + every 10 min. Uses /medeco/values?serie=... endpoint.
 const MEDECO_HEADER_WIDGETS = [
-  { serie: 'pr.GO01.CCNWEA@P.M',  label: 'VGO',        unit: '$/t',   priceId: 'mw-vgo-price',   chgId: 'mw-vgo-chg'   },
-  { serie: 'pr.FO05.PUMFD00@P.M', label: 'VLSFO',      unit: '$/t',   priceId: 'mw-vlsfo-price', chgId: 'mw-vlsfo-chg' },
-  { serie: 'pr.FO35.BFROTT@P.M',  label: 'HSFO',       unit: '$/t',   priceId: 'mw-hsfo-price',  chgId: 'mw-hsfo-chg'  },
-  { serie: 'pr.KJ.CCNWEA@P.M',    label: 'Distillate', unit: '$/t',   priceId: 'mw-dist-price',  chgId: 'mw-dist-chg'  },
-  { serie: 'cr.DBAI.1LI@SP@P.M',  label: 'Dubai',      unit: '$/bbl', priceId: 'mw-dubai-price', chgId: 'mw-dubai-chg' },
+  { serie: 'pr.GO01.CCNWEA@P.M',       label: 'VGO',        unit: '$/t',   priceId: 'mw-vgo-price',      chgId: 'mw-vgo-chg'      },
+  { serie: 'pr.FO05.PUMFD00@P.M',      label: 'VLSFO',      unit: '$/t',   priceId: 'mw-vlsfo-price',    chgId: 'mw-vlsfo-chg'    },
+  { serie: 'pr.FO35.BFROTT@P.M',       label: 'HSFO',       unit: '$/t',   priceId: 'mw-hsfo-price',     chgId: 'mw-hsfo-chg'     },
+  { serie: 'pr.KJ.CCNWEA@P.M',         label: 'Distillate', unit: '$/t',   priceId: 'mw-dist-price',     chgId: 'mw-dist-chg'     },
+  { serie: 'cr.DBAI.1LI@SP@P.M',       label: 'Dubai',      unit: '$/bbl', priceId: 'mw-dubai-price',    chgId: 'mw-dubai-chg'    },
+  { serie: 'cr.BRED.DTD@DUB@SP@P.M',   label: 'B/D Spread', unit: '$/bbl', priceId: 'mw-bdspread-price', chgId: 'mw-bdspread-chg' },
+  // Crack spreads — computed from two series (serieA/divisorA - serieB)
+  { crack:true, serieA:'pr.KJ.CCNWEA@P.M',    divisorA:7.46, serieB:'cr.BRED.DTD@SP@P.M', label:'DIST CRK',   unit:'$/bbl', priceId:'mw-distcrk-price',  chgId:'mw-distcrk-chg'  },
+  { crack:true, serieA:'pr.NA.CCNWEA@P.H',     divisorA:8.9,  serieB:'cr.BRED.DTD@SP@P.M', label:'NAPH CRK',   unit:'$/bbl', priceId:'mw-naphcrk-price',  chgId:'mw-naphcrk-chg'  },
+  { crack:true, serieA:'pr.FO05.PUMFD00@P.M',  divisorA:6.35, serieB:'cr.BRED.DTD@SP@P.M', label:'VLSFO CRK',  unit:'$/bbl', priceId:'mw-vlsfocrk-price', chgId:'mw-vlsfocrk-chg' },
+  { crack:true, serieA:'pr.FO35.BFROTT@P.M',   divisorA:6.35, serieB:'cr.BRED.DTD@SP@P.M', label:'HSFO CRK',   unit:'$/bbl', priceId:'mw-hsfocrk-price',  chgId:'mw-hsfocrk-chg'  },
 ];
 
 async function refreshMedecoHeaderWidgets() {
@@ -1577,35 +1598,105 @@ async function refreshMedecoHeaderWidgets() {
 
   await Promise.allSettled(MEDECO_HEADER_WIDGETS.map(async w => {
     try {
+      // ── Crack spread: fetch two series, compute A/divA - B ──
+      if (w.crack) {
+        const [rA, rB] = await Promise.all([
+          fetch(`${MEDECO_BASE}/values?serie=${encodeURIComponent(w.serieA)}&from=${fmt(fromDate)}&to=${fmt(today)}`, {signal: AbortSignal.timeout(10000)}),
+          fetch(`${MEDECO_BASE}/values?serie=${encodeURIComponent(w.serieB)}&from=${fmt(fromDate)}&to=${fmt(today)}`, {signal: AbortSignal.timeout(10000)}),
+        ]);
+        if (!rA.ok || !rB.ok) return;
+        const [jA, jB] = await Promise.all([rA.json(), rB.json()]);
+        const lA = jA.latest, lB = jB.latest;
+        if (!lA || !lB) return;
+        const val  = +((lA.value / w.divisorA) - lB.value).toFixed(2);
+        const prev = +(((lA.value - lA.change) / w.divisorA) - (lB.value - lB.change)).toFixed(2);
+        const chg  = +(val - prev).toFixed(2);
+        const dir  = chg >= 0 ? 'up' : 'dn';
+        const sign = chg >= 0 ? '+' : '';
+        const pEl  = document.getElementById(w.priceId);
+        const cEl  = document.getElementById(w.chgId);
+        if (pEl) { pEl.textContent = val.toFixed(2); pEl.className = 'yfw-price ' + dir; }
+        if (cEl) { cEl.textContent = `${sign}${chg.toFixed(2)}`; cEl.className = 'yfw-chg ' + dir; }
+        return;
+      }
+      // ── Simple series ──────────────────────────────────────────
       const url  = `${MEDECO_BASE}/values?serie=${encodeURIComponent(w.serie)}&from=${fmt(fromDate)}&to=${fmt(today)}`;
       const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
       if (!resp.ok) return;
       const json = await resp.json();
       const lat  = json.latest;
       if (!lat) return;
-
       const pEl = document.getElementById(w.priceId);
       const cEl = document.getElementById(w.chgId);
       if (!pEl || !cEl) return;
-
-      const dir = lat.direction === 'up' ? 'up' : 'dn';
-      pEl.textContent = Math.round(lat.value).toString();
+      const dir      = lat.direction === 'up' ? 'up' : 'dn';
+      const isSpread = w.label.includes('Spread');
+      pEl.textContent = isSpread ? lat.value.toFixed(2) : Math.round(lat.value).toString();
       pEl.className   = 'yfw-price ' + dir;
-
       const sign = lat.change >= 0 ? '+' : '';
-      cEl.textContent = `${sign}${Math.round(lat.change)} (${lat.changePct >= 0 ? '+' : ''}${lat.changePct.toFixed(1)}%)`;
+      const chgTxt = isSpread ? lat.change.toFixed(2) : Math.round(lat.change).toString();
+      cEl.textContent = `${sign}${chgTxt} (${lat.changePct >= 0?'+':''}${lat.changePct.toFixed(1)}%)`;
       cEl.className   = 'yfw-chg ' + dir;
-
-      // Also store in tickerLiveData for scrolling ticker
-      tickerLiveData[w.label] = {
-        price: `${Math.round(lat.value)} ${w.unit}`,
-        chg:   `${sign}${Math.round(lat.change)}`,
-        dir,
-      };
+      tickerLiveData[w.label] = { price: `${Math.round(lat.value)} ${w.unit}`, chg: `${sign}${Math.round(lat.change)}`, dir };
     } catch(e) { /* silent — proxy may not be running */ }
   }));
+
+
+  // ── WTI/Brent Future spread — fu.WTIBR.E1.C direct Medeco series ──
+  try {
+    const rSpread = await fetch(
+      `${MEDECO_BASE}/values?serie=${encodeURIComponent('fu.WTIBR.E1.C')}&from=${fmt(fromDate)}&to=${fmt(today)}`,
+      {signal: AbortSignal.timeout(8000)}
+    );
+    if (rSpread.ok) {
+      const j   = await rSpread.json();
+      const lat = j.latest;
+      if (lat) {
+        const val  = +lat.value.toFixed(2);
+        const chg  = +lat.change.toFixed(2);
+        const dir  = lat.direction === 'up' ? 'up' : 'dn';
+        const sign = chg >= 0 ? '+' : '';
+        const pEl  = document.getElementById('mw-bwspread-price');
+        const cEl  = document.getElementById('mw-bwspread-chg');
+        if (pEl) { pEl.textContent = val.toFixed(2); pEl.className = 'yfw-price ' + dir; }
+        if (cEl) { cEl.textContent = `${sign}${chg.toFixed(2)}`; cEl.className = 'yfw-chg ' + dir; }
+        console.log(`[SPREAD] WTI/Brent fut: ${val} (${sign}${chg})`);
+      }
+    }
+  } catch(e) { console.warn('[SPREAD] WTI/Brent fut failed:', e.message); }
 }
 // TradingView Ticker Tape widget handles live prices in the banner above.
+const MEDECO_SERIES = [
+  {serie:"cr.BRED.DTD@SP@P.M",       label:"Brent Dated",   unit:"$/bbl"},
+  {serie:"cr.NINI.AAVJB00@P.M",      label:"Brent Spot",    unit:"$/bbl"},
+  {serie:"fu.BR.E1.M",               label:"Brent Fwd 1m",  unit:"$/bbl"},
+  {serie:"cr.WTIM.WMCRB00@P.M",      label:"WTI",           unit:"$/bbl"},
+  {serie:"fu.WTIBR.E1.C",            label:"WTI/Brent Fut", unit:"$/bbl"},
+  {serie:"cr.DBAI.1LI@SP@P.M",       label:"Dubai",         unit:"$/bbl"},
+  {serie:"cr.OMAN.1LI@SP@P.M",       label:"Oman",          unit:"$/bbl"},
+  {serie:"cr.MURB.SP@P.M",           label:"Murban",        unit:"$/bbl"},
+  {serie:"cr.BRED.DTD@DUB@SP@P.M",   label:"Brent/Dubai",   unit:"$/bbl"},
+  {serie:"cr.FORT.D@SP@P.M",         label:"Forties",       unit:"$/bbl"},
+  {serie:"cr.EKOF.D@SP@P.M",         label:"Ekofisk",       unit:"$/bbl"},
+  {serie:"cr.OSEB.D@SP@P.M",         label:"Oseberg",       unit:"$/bbl"},
+  {serie:"cr.TROL.AAWEY00@P.M",      label:"Troll",         unit:"$/bbl"},
+  {serie:"cr.JOHS.AJSVB00@P.M",      label:"Johan Sverdrup",unit:"$/bbl"},
+  {serie:"cr.BSM.SP@BGR.M",          label:"Basra",         unit:"$/bbl"},
+  {serie:"cr.SAM.SP@BGR.M",          label:"Sahara Blend",  unit:"$/bbl"},
+  {serie:"pr.GULSD.BFROTT@P@10.M",   label:"Diesel",        unit:"$/mt"},
+  {serie:"pr.NA.CCNWEA@P.H",         label:"Naphtha",       unit:"$/mt"},
+  {serie:"pr.KJ.CCNWEA@P.M",         label:"Distillate",    unit:"$/mt"},
+  {serie:"pr.GO01.CCNWEA@P.M",       label:"VGO",           unit:"$/mt"},
+  {serie:"pr.FO05.PUMFD00@P.M",      label:"VLSFO",         unit:"$/mt"},
+  {serie:"pr.FO35.BFROTT@P.M",       label:"HSFO",          unit:"$/mt"},
+  {serie:"pr.FO10.CCNWEG@P.M",       label:"LSFO",          unit:"$/mt"},
+  {serie:"pr.MG.NWE@NOXY@AR.M",      label:"Gasoline NWE",  unit:"$/mt"},
+  {serie:"pr.LPGP.LCNWEA@AR.M",      label:"LPG/C3/C4",     unit:"$/mt"},
+  {serie:"fr.CFAF.FSFRM00@P.C",      label:"FAF",           unit:"$/mt"},
+  {serie:"fr.TD7.WD@BITR@WS.M",      label:"TD7 NSEA",      unit:"WS"},
+  {serie:"fr.TD25.WD@BITR@WS.M",     label:"TD25",          unit:"WS"},
+];
+
 // Medeco: use /bulk endpoint on startup — one single request instead of 6 parallel
 // ones, which was causing SSPI Kerberos context collision on Windows.
 async function prefetchMedecoBulk() {
@@ -2642,13 +2733,12 @@ const CHART_CONFIGS = {
 
   // ── DISTILLAT ─────────────────────────────────────────────────
   'medeco-diesel-crack': {
-    title:'DIESEL CRACK vs BRENT ($/bbl)',
-    meta:'pr.GULSD.BFROTT@P@10.M / 7.46  −  cr.BRED.DTD@SP@P.M',
-    medecoLabel:'Diesel Crack', medecoColor:'#38bdf8', medecoUnit:'$/bbl',
-    // crack mode: fetch A and B separately, compute A/divisorA - B
+    title:'DISTILLATE CRACK vs BRENT ($/bbl)',
+    meta:'pr.KJ.CCNWEA@P.M / 7.46  −  cr.BRED.DTD@SP@P.M',
+    medecoLabel:'Distillate Crack', medecoColor:'#38bdf8', medecoUnit:'$/bbl',
     crack: true,
-    medecoA:'pr.GULSD.BFROTT@P@10.M', divisorA: 7.46,
-    medecoB:'cr.BRED.DTD@SP@P.M',     divisorB: 1,
+    medecoA:'pr.KJ.CCNWEA@P.M', divisorA: 7.46,
+    medecoB:'cr.BRED.DTD@SP@P.M', divisorB: 1,
   },
   'medeco-distillate': {
     title:'DISTILLATE NWE ($/t)', meta:'Source: Medeco · pr.KJ.CCNWEA@P.M',
@@ -2656,7 +2746,7 @@ const CHART_CONFIGS = {
   },
 
   // ── GASOLINE ──────────────────────────────────────────────────
-  'medeco-naphtha-crack': {
+    'medeco-naphtha-crack': {
     title:'NAPHTHA CRACK vs BRENT ($/bbl)',
     meta:'pr.NA.CCNWEA@P.H / 8.9  −  cr.BRED.DTD@SP@P.M',
     medecoLabel:'Naphtha Crack', medecoColor:'#22d3ee', medecoUnit:'$/bbl',
@@ -2664,9 +2754,10 @@ const CHART_CONFIGS = {
     medecoA:'pr.NA.CCNWEA@P.H', divisorA: 8.9,
     medecoB:'cr.BRED.DTD@SP@P.M', divisorB: 1,
   },
-  'medeco-gasoline': {
-    title:'GASOLINE NWE ($/t)', meta:'Source: Medeco · pr.MG.NWE@NOXY@AR.M',
-    medeco:'pr.MG.NWE@NOXY@AR.M', medecoLabel:'Gasoline NWE', medecoColor:'#86efac', medecoUnit:'$/t'
+    'medeco-gasoline': {
+    title:'NAPHTHA NWE ($/t)',
+    meta:'Source: Medeco · pr.NA.CCNWEA@P.H',
+    medeco:'pr.NA.CCNWEA@P.H', medecoLabel:'Naphtha', medecoColor:'#22d3ee', medecoUnit:'$/t',
   },
   'medeco-lpg': {
     title:'LPG NWE ($/t)', meta:'Source: Medeco · pr.LPGP.LCNWEA@AR.M',
@@ -2847,8 +2938,8 @@ function showChart(key){
     // UN Comtrade live trade flows
     buildComtradeChart(conf.comtradeMode);
     return;
-  } else if(conf.medeco){
-    // Medeco internal live series
+  } else if(conf.medeco || conf.crack){
+    // Medeco internal live series (simple or crack spread)
     buildMedecoChart(ctx, conf);
   } else if(conf.build) {
     setTimeout(()=>{ currentMainChart = conf.build(ctx); },30);
@@ -3221,8 +3312,22 @@ function _rssMapItem(it, feedDef, source='json') {
   };
 }
 
+async function _tryLocalProxy(feedDef) {
+  // Local Medeco proxy — most reliable, no whitelist, works from GitHub Pages
+  // Requires medeco_proxy.py running on localhost:8765
+  const url = `http://localhost:8765/rss/fetch?url=${encodeURIComponent(feedDef.url)}`;
+  const r = await fetch(url, {signal: AbortSignal.timeout(8000)});
+  if(!r.ok) throw new Error('local proxy HTTP '+r.status);
+  const text = await r.text();
+  const xml = new DOMParser().parseFromString(text, 'application/xml');
+  const items = [...xml.querySelectorAll('item')].slice(0,15);
+  if(!items.length) throw new Error('local proxy no items');
+  return items.map(it => _rssMapItem(it, feedDef, 'xml'));
+}
+
 async function _tryRss2json(feedDef) {
-  const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedDef.url)}&count=12`;
+  // rss2json — free tier limited, 422 = feed not in whitelist
+  const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedDef.url)}&count=15`;
   const r = await fetch(api, {signal: AbortSignal.timeout(6000)});
   if(!r.ok) throw new Error('rss2json HTTP '+r.status);
   const j = await r.json();
@@ -3231,10 +3336,13 @@ async function _tryRss2json(feedDef) {
 }
 
 async function _tryAllOrigins(feedDef) {
-  const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(feedDef.url)}`;
+  // allorigins /get returns JSON wrapper — more reliable than /raw
+  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(feedDef.url)}`;
   const r = await fetch(proxy, {signal: AbortSignal.timeout(7000)});
   if(!r.ok) throw new Error('allorigins HTTP '+r.status);
-  const text = await r.text();
+  const j = await r.json();
+  const text = j.contents || '';
+  if(!text) throw new Error('allorigins empty');
   const xml = new DOMParser().parseFromString(text, 'application/xml');
   const items = [...xml.querySelectorAll('item')].slice(0,12);
   if(!items.length) throw new Error('allorigins no items');
@@ -3242,13 +3350,17 @@ async function _tryAllOrigins(feedDef) {
 }
 
 async function _tryCorsProxy(feedDef) {
-  const proxy = `https://corsproxy.io/?${encodeURIComponent(feedDef.url)}`;
-  const r = await fetch(proxy, {signal: AbortSignal.timeout(7000)});
-  if(!r.ok) throw new Error('corsproxy HTTP '+r.status);
+  // Third fallback: cors.sh proxy
+  const proxy = `https://proxy.cors.sh/${feedDef.url}`;
+  const r = await fetch(proxy, {
+    signal: AbortSignal.timeout(7000),
+    headers: {'x-cors-api-key': 'temp_...'}
+  });
+  if(!r.ok) throw new Error('cors.sh HTTP '+r.status);
   const text = await r.text();
   const xml = new DOMParser().parseFromString(text, 'application/xml');
   const items = [...xml.querySelectorAll('item')].slice(0,12);
-  if(!items.length) throw new Error('corsproxy no items');
+  if(!items.length) throw new Error('cors.sh no items');
   return items.map(it => _rssMapItem(it, feedDef, 'xml'));
 }
 
@@ -3293,7 +3405,7 @@ function _scheduleBgRefresh(feedDef, cacheKey) {
 }
 
 async function _fetchWithFallback(feedDef, cacheKey) {
-  const proxies = [_tryRss2json, _tryAllOrigins, _tryCorsProxy];
+  const proxies = [_tryLocalProxy, _tryRss2json, _tryAllOrigins, _tryCorsProxy];
   for(const proxy of proxies) {
     try {
       const items = await proxy(feedDef);
