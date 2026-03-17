@@ -955,12 +955,16 @@ body {
 
     <!-- ── DISTILLAT pills ── -->
     <span id="medeco-dist-pills" style="display:none">
-      <button class="pill medeco-pill" onclick="showChart('medeco-diesel-crack')" style="border-color:rgba(34,211,238,.25);color:var(--dim)">DIESEL CRACK</button>
-      <button class="pill medeco-pill" onclick="showChart('medeco-distillate')"   style="border-color:rgba(34,211,238,.25);color:var(--dim)">DISTILLATE</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-diesel-crack')"  style="border-color:rgba(34,211,238,.25);color:var(--dim)">DIESEL CRACK</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-distillate')"    style="border-color:rgba(34,211,238,.25);color:var(--dim)">DISTILLATE</button>
+      <button class="pill medeco-pill" onclick="showChart('distillate-stocks')"    style="border-color:rgba(79,195,247,.25);color:#4fc3f7">⚡ US STOCKS</button>
+      <button class="pill medeco-pill" onclick="showChart('jet-stocks')"           style="border-color:rgba(79,195,247,.25);color:#4fc3f7">⚡ US JET</button>
     </span>
 
     <!-- ── LNG pills ── -->
     <span id="medeco-lng-pills" style="display:none">
+      <button class="pill medeco-pill" onclick="showChart('lng-eu-storage')"   style="border-color:rgba(34,211,238,.35);color:#22d3ee">⚡ EU STORAGE</button>
+      <button class="pill medeco-pill" onclick="showChart('lng-eu-countries')" style="border-color:rgba(34,211,238,.25);color:var(--dim)">⚡ BY COUNTRY</button>
     </span>
 
     <!-- ── GASOLINE pills ── -->
@@ -970,6 +974,7 @@ body {
       <button class="pill medeco-pill" onclick="showChart('medeco-lpg')"           style="border-color:rgba(74,222,128,.25);color:var(--dim)">LPG</button>
       <button class="pill medeco-pill" onclick="showChart('medeco-c3')"            style="border-color:rgba(74,222,128,.25);color:var(--dim)">C3</button>
       <button class="pill medeco-pill" onclick="showChart('medeco-c4')"            style="border-color:rgba(74,222,128,.25);color:var(--dim)">C4</button>
+      <button class="pill medeco-pill" onclick="showChart('gasoline-stocks')"   style="border-color:rgba(74,222,128,.25);color:#4ade80">⚡ US STOCKS</button>
     </span>
 
     <!-- ── FUEL OIL pills ── -->
@@ -980,6 +985,7 @@ body {
       <button class="pill medeco-pill" onclick="showChart('medeco-hsfo-crack')"  style="border-color:rgba(251,146,60,.25);color:var(--dim)">HSFO CRACK</button>
       <button class="pill medeco-pill" onclick="showChart('medeco-lsfo')"        style="border-color:rgba(251,146,60,.25);color:var(--dim)">LSFO</button>
       <button class="pill medeco-pill" onclick="showChart('medeco-vgo')"         style="border-color:rgba(251,146,60,.25);color:var(--dim)">VGO</button>
+      <button class="pill medeco-pill" onclick="showChart('fueloil-stocks')"    style="border-color:rgba(251,146,60,.25);color:#fb923c">⚡ US STOCKS</button>
     </span>
 
     <!-- ── SHIPPING pills ── -->
@@ -2441,7 +2447,27 @@ async function buildEIAChart(chartKey) {
     unit  = 'Mb/d'; label = 'Imports'; color = '#a855f7';
   }
 
-  if (!rows || !rows.length) {
+  if (chartKey === 'distillate-stocks') {
+    rows = await fetchEIADistillateStocks();
+    title = 'US DISTILLATE STOCKS — EIA LIVE (Mbbl)';
+    unit  = 'Mbbl'; label = 'Distillate Stocks'; color = '#38bdf8';
+  }
+  if (chartKey === 'fueloil-stocks') {
+    rows = await fetchEIAFuelOilStocks();
+    title = 'US FUEL OIL STOCKS — EIA LIVE (Mbbl)';
+    unit  = 'Mbbl'; label = 'Fuel Oil Stocks'; color = '#fb923c';
+  }
+  if (chartKey === 'gasoline-stocks') {
+    rows = await fetchEIAGasolineStocks();
+    title = 'US GASOLINE STOCKS — EIA LIVE (Mbbl)';
+    unit  = 'Mbbl'; label = 'Gasoline Stocks'; color = '#4ade80';
+  }
+  if (chartKey === 'jet-stocks') {
+    rows = await fetchEIAKeroJetStocks();
+    title = 'US JET FUEL STOCKS — EIA LIVE (Mbbl)';
+    unit  = 'Mbbl'; label = 'Jet Fuel Stocks'; color = '#818cf8';
+  }
+    if (!rows || !rows.length) {
     av.innerHTML = `<div style="height:100%;display:flex;align-items:center;justify-content:center;
       flex-direction:column;gap:10px;color:var(--dim)">
       <div style="font-size:20px">⚠️</div>
@@ -2610,6 +2636,15 @@ const CHART_CONFIGS = {
     eiaKey:'imports',
     build:(ctx)=>{ /* replaced by buildEIAChart */ }
   },
+  // ── LNG / GIE AGSI+ Charts ──────────────────────────────────────
+  'lng-eu-storage':   { title:'EU GAS STORAGE (% full)', meta:'GIE AGSI+ · Daily', gieKey:'eu-storage'    },
+  'lng-eu-countries': { title:'EU GAS STORAGE BY COUNTRY', meta:'GIE AGSI+ · Daily', gieKey:'eu-countries' },
+  // ── EIA Product Stock Charts ──────────────────────────────────────
+  'distillate-stocks':{ title:'US DISTILLATE STOCKS (Mbbl)', meta:'EIA Weekly · WDISTUS1', eiaKey:'distillate-stocks' },
+  'fueloil-stocks':   { title:'US FUEL OIL STOCKS (Mbbl)',   meta:'EIA Weekly · WFUELOS1', eiaKey:'fueloil-stocks'    },
+  'gasoline-stocks':  { title:'US GASOLINE STOCKS (Mbbl)',   meta:'EIA Weekly · WGTSTUS1', eiaKey:'gasoline-stocks'   },
+  'jet-stocks':       { title:'US JET FUEL STOCKS (Mbbl)',   meta:'EIA Weekly · WKJSTUS1', eiaKey:'jet-stocks'        },
+  // ────────────────────────────────────────────────────────────────
   balance:{
     title:'GLOBAL OIL SUPPLY vs DEMAND (Mb/d)',
     meta:'Annual · 2015–2025e · Source: IEA OMR Feb 2025',
@@ -2911,7 +2946,11 @@ function showChart(key){
   av.innerHTML = '<canvas id="main-chart"></canvas>';
   const ctx = document.getElementById('main-chart');
 
-  if(conf.eiaKey){
+  if(conf.gieKey){
+    // GIE AGSI+ gas storage chart
+    buildGIEChart(conf.gieKey);
+    return;
+  } else if(conf.eiaKey){
     // EIA live data chart
     buildEIAChart(conf.eiaKey);
     return; // early return — buildEIAChart handles its own canvas
@@ -4169,6 +4208,7 @@ function setProductMode(mode) {
   }
 
   showView('map');
+  loadProductKPIs(mode); // load live product KPIs for this mode
 
   // Show Medeco pills per mode
   const medecoSep = document.getElementById('medeco-pills-sep');
@@ -4356,6 +4396,167 @@ setInterval(loadNewsTicker, 600000);
    Displays current stocks / production / imports as mini badges
 ─────────────────────────────────────────────────────────────── */
 
+
+// ── GIE AGSI+ Chart Builder ──────────────────────────────────────
+const GIE_KEY = 'a69f07b1325d1877ff0edfc060ba32f2';
+
+async function fetchGIEStorage(country='EU', days=90) {
+  const url = `https://agsi.gie.eu/api/data/${country}?size=${days}`;
+  const r   = await fetch(url, {
+    signal: AbortSignal.timeout(8000),
+    headers: { 'x-key': GIE_KEY },
+  });
+  if (!r.ok) throw new Error(`GIE HTTP ${r.status}`);
+  return await r.json();
+}
+
+async function buildGIEChart(gieKey) {
+  const av  = document.getElementById('analytics-view');
+  av.innerHTML = `<div style="height:100%;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;gap:10px;color:var(--dim)">
+    <div style="font-size:11px;letter-spacing:.15em;color:#22d3ee;animation:blink 1s infinite">
+      ⚡ FETCHING GIE AGSI+ DATA…
+    </div>
+    <div style="font-size:9px">agsi.gie.eu</div>
+  </div>`;
+
+  try {
+    if (gieKey === 'eu-storage') {
+      // EU aggregate — last 365 days as time series
+      const j    = await fetchGIEStorage('EU', 365);
+      const data = (j?.data || []).reverse(); // oldest first
+
+      if (!data.length) throw new Error('No GIE data');
+
+      const labels = data.map(d => d.gasDayStart);
+      const pct    = data.map(d => d.full ? parseFloat(d.full) : null);
+      const latest = data[data.length - 1];
+      const pctVal = latest?.full ? (+latest.full).toFixed(1) : '—';
+      const volVal = latest?.gasInStorage ? (+latest.gasInStorage/1000).toFixed(0) + ' TWh' : '';
+      const date   = latest?.gasDayStart || '';
+
+      av.innerHTML = '<canvas id="main-chart"></canvas>';
+      const ctx = document.getElementById('main-chart');
+      const pctNum = parseFloat(pctVal);
+      const lineCol = pctNum > 70 ? '#39d98a' : pctNum > 40 ? '#f0a500' : '#e05252';
+
+      currentMainChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'EU Storage % full',
+            data: pct,
+            borderColor: lineCol,
+            backgroundColor: lineCol + '18',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 0,
+            borderWidth: 2,
+          }, {
+            label: 'Low (20%)',
+            data: data.map(() => 20),
+            borderColor: '#e0525240',
+            borderDash: [6, 4],
+            pointRadius: 0,
+            fill: false,
+            borderWidth: 1,
+          }, {
+            label: 'High (90%)',
+            data: data.map(() => 90),
+            borderColor: '#39d98a40',
+            borderDash: [6, 4],
+            pointRadius: 0,
+            fill: false,
+            borderWidth: 1,
+          }],
+        },
+        options: {
+          ...chartOpts(),
+          plugins: {
+            ...chartOpts().plugins,
+            title: {
+              display: true,
+              text: `EU GAS STORAGE — ${pctVal}% full · ${volVal} · ${date}`,
+              color: lineCol,
+              font: { size: 11, family: "'IBM Plex Mono', monospace" },
+            },
+          },
+          scales: {
+            ...chartOpts().scales,
+            y: { ...chartOpts().scales?.y, min: 0, max: 100,
+              ticks: { ...chartOpts().scales?.y?.ticks, callback: v => v + '%' }
+            },
+          },
+        },
+      });
+
+    } else if (gieKey === 'eu-countries') {
+      // Latest storage by country — bar chart
+      const countries = ['DE','FR','IT','NL','AT','BE','CZ','HU','PL','ES','PT','RO','SK','SE','DK','BG'];
+      const results   = await Promise.allSettled(
+        countries.map(c => fetchGIEStorage(c, 1))
+      );
+      const bars = [];
+      results.forEach((r, i) => {
+        if (r.status === 'fulfilled') {
+          const d   = r.value?.data?.[0];
+          const pct = d?.full ? parseFloat(d.full) : null;
+          if (pct !== null) bars.push({ country: countries[i], pct });
+        }
+      });
+      bars.sort((a, b) => b.pct - a.pct);
+
+      av.innerHTML = '<canvas id="main-chart"></canvas>';
+      const ctx = document.getElementById('main-chart');
+      currentMainChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: bars.map(b => b.country),
+          datasets: [{
+            label: 'Storage % full',
+            data: bars.map(b => b.pct),
+            backgroundColor: bars.map(b =>
+              b.pct > 70 ? '#39d98a80' : b.pct > 40 ? '#f0a50080' : '#e0525280'
+            ),
+            borderColor: bars.map(b =>
+              b.pct > 70 ? '#39d98a' : b.pct > 40 ? '#f0a500' : '#e05252'
+            ),
+            borderWidth: 1,
+          }],
+        },
+        options: {
+          ...chartOpts(),
+          plugins: {
+            ...chartOpts().plugins,
+            title: {
+              display: true,
+              text: 'EU GAS STORAGE BY COUNTRY (% full) · GIE AGSI+',
+              color: '#22d3ee',
+              font: { size: 11, family: "'IBM Plex Mono', monospace" },
+            },
+          },
+          scales: {
+            ...chartOpts().scales,
+            y: { ...chartOpts().scales?.y, min: 0, max: 100,
+              ticks: { ...chartOpts().scales?.y?.ticks, callback: v => v + '%' }
+            },
+          },
+        },
+      });
+    }
+
+  } catch(e) {
+    console.error('[GIE]', e.message);
+    av.innerHTML = `<div style="height:100%;display:flex;align-items:center;justify-content:center;
+      flex-direction:column;gap:8px;padding:20px">
+      <div style="font-size:20px">⚠️</div>
+      <div style="font-size:11px;color:var(--accent2);letter-spacing:.1em">GIE AGSI+ UNAVAILABLE</div>
+      <div style="font-size:9px;color:var(--dim)">${e.message}</div>
+    </div>`;
+  }
+}
+
 // ── loadBalanceKPIs — populates the 3 live columns on the Global Balance panel ──
 // Sources: EIA API (STEO + production + imports) — free, CORS-enabled
 async function loadBalanceKPIs() {
@@ -4483,6 +4684,207 @@ async function loadBalanceKPIs() {
 
   } catch(e) {
     console.warn('[BALANCE] loadBalanceKPIs error:', e.message);
+  }
+}
+
+
+// ── EIA Product Stocks Fetchers ───────────────────────────────────
+async function fetchEIADistillateStocks() {
+  const j = await fetchEIA('/petroleum/stoc/wstk/data/', {
+    frequency:'weekly', data:'value', facets:'WDISTUS1',
+    sort:'period', direction:'desc', length:52,
+  });
+  return (j?.response?.data || []).map(r => ({date:r.period, value:+(parseFloat(r.value)/1000).toFixed(1)})).filter(r=>!isNaN(r.value)).reverse();
+}
+
+async function fetchEIAFuelOilStocks() {
+  const j = await fetchEIA('/petroleum/stoc/wstk/data/', {
+    frequency:'weekly', data:'value', facets:'WFUELOS1',
+    sort:'period', direction:'desc', length:52,
+  });
+  return (j?.response?.data || []).map(r => ({date:r.period, value:+(parseFloat(r.value)/1000).toFixed(1)})).filter(r=>!isNaN(r.value)).reverse();
+}
+
+async function fetchEIAGasolineStocks() {
+  const j = await fetchEIA('/petroleum/stoc/wstk/data/', {
+    frequency:'weekly', data:'value', facets:'WGTSTUS1',
+    sort:'period', direction:'desc', length:52,
+  });
+  return (j?.response?.data || []).map(r => ({date:r.period, value:+(parseFloat(r.value)/1000).toFixed(1)})).filter(r=>!isNaN(r.value)).reverse();
+}
+
+async function fetchEIANGLiquids() {
+  // NGL/LPG production proxy
+  const j = await fetchEIA('/petroleum/stoc/wstk/data/', {
+    frequency:'weekly', data:'value', facets:'WPRSTUS1',
+    sort:'period', direction:'desc', length:52,
+  });
+  return (j?.response?.data || []).map(r => ({date:r.period, value:+(parseFloat(r.value)/1000).toFixed(1)})).filter(r=>!isNaN(r.value)).reverse();
+}
+
+async function fetchEIAKeroJetStocks() {
+  // Kerosene-type jet fuel stocks
+  const j = await fetchEIA('/petroleum/stoc/wstk/data/', {
+    frequency:'weekly', data:'value', facets:'WKJSTUS1',
+    sort:'period', direction:'desc', length:52,
+  });
+  return (j?.response?.data || []).map(r => ({date:r.period, value:+(parseFloat(r.value)/1000).toFixed(1)})).filter(r=>!isNaN(r.value)).reverse();
+}
+
+// ── Product KPI loader — called by setProductMode ─────────────────
+async function loadProductKPIs(mode) {
+  const strip = document.getElementById('eia-kpi-strip');
+  if (!strip) return;
+
+  const kpiStyle = (bg, border) =>
+    `flex:1;min-width:80px;padding:5px 7px;background:${bg};border:1px solid ${border}`;
+
+  const fmtRow = (rows, unit, dec=1) => {
+    if (!rows?.length) return '<span style="color:var(--dim)">—</span>';
+    const v   = rows[rows.length-1].value;
+    const p   = rows[rows.length-2]?.value;
+    const chg = p != null ? v - p : 0;
+    const dir = chg >= 0 ? '▲' : '▼';
+    const col = chg >= 0 ? 'var(--green)' : 'var(--accent2)';
+    const dt  = rows[rows.length-1].date;
+    return `<span style="color:var(--text)">${v.toFixed(dec)}</span>`
+         + `<span style="color:${col};font-size:8px;margin-left:2px">${dir}${Math.abs(chg).toFixed(dec)}</span>`
+         + `<span style="color:var(--dim);font-size:8px"> ${unit}</span>`
+         + `<div style="font-size:7px;color:var(--dim);margin-top:1px">${dt}</div>`;
+  };
+
+  strip.innerHTML = '<span style="font-size:9px;color:var(--dim)">⚡ EIA…</span>';
+
+  try {
+    if (mode === 'crude') {
+      // Existing crude KPIs
+      loadEIAKPIs();
+      return;
+    }
+
+    if (mode === 'distillat') {
+      const [dist, jet] = await Promise.all([
+        fetchEIADistillateStocks(),
+        fetchEIAKeroJetStocks(),
+      ]);
+      strip.innerHTML = `
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+          <div style="${kpiStyle('rgba(56,189,248,.06)','rgba(56,189,248,.2)')}">
+            <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">US DISTILLATE STOCKS</div>
+            <div style="font-size:11px">${fmtRow(dist,'Mbbl')}</div>
+            <div style="font-size:8px;color:var(--dim);margin-top:1px">EIA Weekly</div>
+          </div>
+          <div style="${kpiStyle('rgba(56,189,248,.06)','rgba(56,189,248,.15)')}">
+            <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">US JET FUEL STOCKS</div>
+            <div style="font-size:11px">${fmtRow(jet,'Mbbl')}</div>
+            <div style="font-size:8px;color:var(--dim);margin-top:1px">EIA Weekly</div>
+          </div>
+          <div style="${kpiStyle('rgba(56,189,248,.04)','rgba(56,189,248,.1)')}">
+            <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">EU GASOIL STOCKS</div>
+            <div style="font-size:11px;color:var(--dim)">→ Euroilstock</div>
+            <div style="font-size:8px;color:var(--dim);margin-top:1px">Monthly · delayed</div>
+          </div>
+        </div>
+        <div style="font-size:8px;color:var(--dim);margin-top:5px;text-align:right">⚡ api.eia.gov · WPSR · ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>`;
+      return;
+    }
+
+    if (mode === 'fuel') {
+      const fuel = await fetchEIAFuelOilStocks();
+      strip.innerHTML = `
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+          <div style="${kpiStyle('rgba(251,146,60,.06)','rgba(251,146,60,.2)')}">
+            <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">US FUEL OIL STOCKS</div>
+            <div style="font-size:11px">${fmtRow(fuel,'Mbbl')}</div>
+            <div style="font-size:8px;color:var(--dim);margin-top:1px">EIA Weekly</div>
+          </div>
+          <div style="${kpiStyle('rgba(251,146,60,.04)','rgba(251,146,60,.1)')}">
+            <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">BUNKER VLSFO RDAM</div>
+            <div style="font-size:11px;color:var(--dim)">→ Ship&amp;Bunker</div>
+            <div style="font-size:8px;color:var(--dim);margin-top:1px">Via RSS · live</div>
+          </div>
+          <div style="${kpiStyle('rgba(251,146,60,.04)','rgba(251,146,60,.1)')}">
+            <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">BUNKER HSFO SING</div>
+            <div style="font-size:11px;color:var(--dim)">→ Ship&amp;Bunker</div>
+            <div style="font-size:8px;color:var(--dim);margin-top:1px">Via RSS · live</div>
+          </div>
+        </div>
+        <div style="font-size:8px;color:var(--dim);margin-top:5px;text-align:right">⚡ api.eia.gov · WPSR · ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>`;
+      return;
+    }
+
+    if (mode === 'gasoline') {
+      const [gas, ngl] = await Promise.all([
+        fetchEIAGasolineStocks(),
+        fetchEIANGLiquids(),
+      ]);
+      strip.innerHTML = `
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+          <div style="${kpiStyle('rgba(74,222,128,.06)','rgba(74,222,128,.2)')}">
+            <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">US GASOLINE STOCKS</div>
+            <div style="font-size:11px">${fmtRow(gas,'Mbbl')}</div>
+            <div style="font-size:8px;color:var(--dim);margin-top:1px">EIA Weekly</div>
+          </div>
+          <div style="${kpiStyle('rgba(74,222,128,.04)','rgba(74,222,128,.15)')}">
+            <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">US PROPANE/NGL</div>
+            <div style="font-size:11px">${fmtRow(ngl,'Mbbl')}</div>
+            <div style="font-size:8px;color:var(--dim);margin-top:1px">EIA Weekly</div>
+          </div>
+        </div>
+        <div style="font-size:8px;color:var(--dim);margin-top:5px;text-align:right">⚡ api.eia.gov · WPSR · ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>`;
+      return;
+    }
+
+    if (mode === 'lng') {
+      // GIE AGSI+ EU gas storage
+      try {
+        const gieUrl  = 'https://agsi.gie.eu/api/data/EU?size=1';
+        const r = await fetch(gieUrl, {
+          signal: AbortSignal.timeout(6000),
+          headers: { 'x-key': GIE_KEY },
+        });
+        if (r.ok) {
+          const j    = await r.json();
+          const d    = j?.data?.[0];
+          const pct  = d?.full      ? (+d.full).toFixed(1)      : '—';
+          const inj  = d?.injection ? (+d.injection).toFixed(2)  : '—';
+          const wdr  = d?.withdrawal? (+d.withdrawal).toFixed(2) : '—';
+          const vol  = d?.gasInStorage ? (+d.gasInStorage/1000).toFixed(0) : '—';
+          const dt   = d?.gasDayStart || '';
+          const pctNum = parseFloat(pct);
+          const pctCol = pctNum > 70 ? 'var(--green)' : pctNum > 40 ? 'var(--accent)' : 'var(--accent2)';
+          strip.innerHTML = `
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+              <div style="${kpiStyle('rgba(34,211,238,.06)','rgba(34,211,238,.2)')}">
+                <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">EU GAS STORAGE</div>
+                <div style="font-size:13px;font-weight:600"><span style="color:${pctCol}">${pct}%</span><span style="color:var(--dim);font-size:9px"> full</span></div>
+                <div style="font-size:7px;color:var(--dim);margin-top:1px">${vol} TWh · ${dt}</div>
+              </div>
+              <div style="${kpiStyle('rgba(34,211,238,.04)','rgba(34,211,238,.15)')}">
+                <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">INJECTION</div>
+                <div style="font-size:11px"><span style="color:var(--green)">${inj}</span><span style="color:var(--dim);font-size:8px"> GWh/d</span></div>
+                <div style="font-size:7px;color:var(--dim);margin-top:1px">net flow in</div>
+              </div>
+              <div style="${kpiStyle('rgba(34,211,238,.04)','rgba(34,211,238,.15)')}">
+                <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">WITHDRAWAL</div>
+                <div style="font-size:11px"><span style="color:var(--accent2)">${wdr}</span><span style="color:var(--dim);font-size:8px"> GWh/d</span></div>
+                <div style="font-size:7px;color:var(--dim);margin-top:1px">net flow out</div>
+              </div>
+            </div>
+            <div style="font-size:8px;color:var(--dim);margin-top:5px;text-align:right">⚡ GIE AGSI+ · ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>`;
+        }
+      } catch(e) {
+        strip.innerHTML = '<span style="font-size:9px;color:var(--dim)">GIE unavailable</span>';
+      }
+      return;
+    }
+
+    // Default: clear strip for shipping/other modes
+    strip.innerHTML = '';
+
+  } catch(e) {
+    console.warn('[PRODUCT KPI]', mode, e.message);
+    strip.innerHTML = '<span style="font-size:9px;color:var(--dim)">Data unavailable</span>';
   }
 }
 
