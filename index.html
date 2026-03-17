@@ -1471,48 +1471,67 @@ const FRED_API_KEY = '30f3e28802f893aa8bc8e9884184bc33';
 const FRED_BASE    = 'https://api.stlouisfed.org/fred';
 
 async function fetchFedRate() {
-  // FRED API supports CORS from https:// origins (GitHub Pages, localhost)
-  // Only blocked from file:// (null origin) — use proxy fallback in that case
-  const fredUrl = `${FRED_BASE}/series/observations`
-                + `?series_id=DFEDTARU&api_key=${FRED_API_KEY}`
-                + `&sort_order=desc&limit=5&file_type=json`;
+  // JSONP approach — bypasses CORS entirely, works from file://, GitHub Pages, anywhere
+  // FRED supports ?callback= for JSONP responses
+  return new Promise((resolve) => {
+    const callbackName = '_fredCb_' + Date.now();
+    const script = document.createElement('script');
+    let settled = false;
 
-  // Source 1: FRED direct (works from https:// — GitHub Pages, http://localhost)
-  try {
-    const resp = await fetch(fredUrl, { signal: AbortSignal.timeout(7000) });
-    if (resp.ok) {
-      const j   = await resp.json();
-      const obs = (j.observations || []).filter(o => o.value !== '.' && o.value !== '');
-      if (obs.length) {
+    const cleanup = () => {
+      try { document.head.removeChild(script); } catch(e) {}
+      try { delete window[callbackName]; } catch(e) {}
+    };
+
+    // Timeout after 8s
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      // Fallback: try via local proxy (if medeco_proxy.py running)
+      fetch('http://localhost:8765/fred/rate', { signal: AbortSignal.timeout(3000) })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => resolve(d?.rate ? d : null))
+        .catch(() => resolve(null));
+    }, 8000);
+
+    window[callbackName] = (data) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      cleanup();
+      try {
+        const obs = (data.observations || []).filter(o => o.value !== '.' && o.value !== '');
+        if (!obs.length) { resolve(null); return; }
         const latest = obs[0];
         const prev   = obs.find(o => o.value !== latest.value);
         const rate   = parseFloat(latest.value);
         const pRate  = prev ? parseFloat(prev.value) : rate;
         const chg    = rate - pRate;
         const chgTxt = chg === 0 ? 'UNCHANGED' : `${chg>0?'+':''}${(chg*100).toFixed(0)}bps`;
-        console.log(`[FED] ✓ FRED live: ${rate}% as of ${latest.date} (${chgTxt})`);
-        return { rate, date: latest.date, chg, chgTxt, dir: chg>0?'up':chg<0?'dn':'' };
+        console.log(`[FED] ✓ JSONP: ${rate}% as of ${latest.date} (${chgTxt})`);
+        resolve({ rate, date: latest.date, chg, chgTxt, dir: chg>0?'up':chg<0?'dn':'' });
+      } catch(e) {
+        console.warn('[FED] JSONP parse error:', e.message);
+        resolve(null);
       }
-    }
-  } catch(e) {
-    console.warn('[FED] FRED direct blocked (file:// origin?):', e.message);
-  }
+    };
 
-  // Source 2: Local proxy fallback (works when medeco_proxy.py is running)
-  try {
-    const resp = await fetch('http://localhost:8765/fred/rate',
-      { signal: AbortSignal.timeout(4000) });
-    if (resp.ok) {
-      const d = await resp.json();
-      if (d.rate) {
-        console.log(`[FED] ✓ via proxy: ${d.rate}% ${d.chgTxt}`);
-        return { rate: d.rate, date: d.date, chg: d.chg, chgTxt: d.chgTxt, dir: d.dir };
-      }
-    }
-  } catch(e) { /* proxy not running */ }
-
-  console.warn('[FED] All sources failed');
-  return null;
+    const url = `${FRED_BASE}/series/observations`
+              + `?series_id=DFEDTARU&api_key=${FRED_API_KEY}`
+              + `&sort_order=desc&limit=5&file_type=json`
+              + `&callback=${callbackName}`;
+    script.src = url;
+    script.onerror = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      cleanup();
+      console.warn('[FED] JSONP script load error');
+      resolve(null);
+    };
+    document.head.appendChild(script);
+  });
 }
 
 async function refreshFedWidget() {
