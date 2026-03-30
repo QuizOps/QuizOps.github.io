@@ -39,7 +39,6 @@ body {
   font-family: 'DM Mono', monospace;
   font-size: 12px;
   height: 100vh;
-  height: 100dvh; /* dvh = dynamic viewport height — fixes mobile browser bar */
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -390,8 +389,6 @@ body {
 
   /* ── Hide desktop-only elements ── */
   #ticker-bar,
-  #fed-widget,
-  #yf-widgets,
   .tradingview-widget-container,
   #bottom-panel,
   #medeco-pills-sep,
@@ -407,12 +404,6 @@ body {
   #clock,
   .divider,
   #mode-bar { display: none !important; }
-
-  /* Force bottom-panel to truly disappear on mobile */
-  #bottom-panel {
-    display: none !important;
-    height: 0 !important;
-  }
 
   /* ── Body: allow scroll on mobile ── */
   body {
@@ -445,30 +436,11 @@ body {
   /* Hide all nav pills — replaced by bottom tab bar */
   .nav-pills { display: none !important; }
 
-  /* Mode bar: show as compact horizontal scroll on mobile */
-  #mode-bar {
-    display: flex !important;
-    overflow-x: auto !important;
-    overflow-y: hidden;
-    scrollbar-width: none;
-    height: 36px !important;
-    gap: 2px !important;
-    padding: 0 6px !important;
-    flex-shrink: 0;
-  }
-  #mode-bar::-webkit-scrollbar { display: none; }
-  #mode-bar .mode-btn {
-    font-size: 9px !important;
-    padding: 4px 8px !important;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
   /* ── Main: full height, no side panel by default ── */
   #main {
     flex: 1;
     overflow: hidden;
-    padding-bottom: calc(56px + env(safe-area-inset-bottom));
+    padding-bottom: 56px; /* room for bottom tab bar */
   }
 
   /* ── Map: full width ── */
@@ -480,12 +452,11 @@ body {
   /* ── Side panel: hidden, becomes bottom drawer ── */
   #side-panel {
     position: fixed !important;
-    bottom: calc(56px + env(safe-area-inset-bottom));
+    bottom: 56px;
     left: 0;
     right: 0;
     width: 100% !important;
-    height: 60dvh;
-    max-height: calc(100dvh - 120px);
+    height: 70dvh;
     z-index: 3000;
     border-left: none !important;
     border-top: 2px solid var(--accent);
@@ -516,13 +487,9 @@ body {
     position: fixed !important;
     inset: 0 !important;
     z-index: 4000;
-    padding-bottom: 56px !important;
+    padding-bottom: 56px;
     display: flex;
     flex-direction: column;
-  }
-  #storage-overlay {
-    padding-bottom: 56px !important;
-    z-index: 4000;
   }
   .overlay.overlay-hidden {
     display: none !important;
@@ -532,16 +499,13 @@ body {
   #mob-tab-bar {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: calc(56px + env(safe-area-inset-bottom));
-    min-height: 56px;
+    height: 56px;
     background: var(--panel);
     border-top: 1px solid var(--border);
-    display: flex !important;
+    display: flex;
     align-items: stretch;
-    z-index: 9999;
+    z-index: 5000;
     padding-bottom: env(safe-area-inset-bottom);
-    visibility: visible !important;
-    opacity: 1 !important;
   }
   .mob-tab {
     flex: 1;
@@ -669,12 +633,6 @@ body {
 /* Storage panes — hidden by default, shown by switchStorageTab */
 .storage-pane { display: none; position: absolute; inset: 0; }
 
-/* Mobile country toast — hidden on desktop */
-#mob-country-toast { display: none; }
-@media (max-width: 768px) {
-  #mob-country-toast { display: block; }
-}
-
 /* ── Show bottom tab bar + mob charts only on mobile ── */
 #mob-tab-bar { display: none; }
 #mob-charts-overlay { display: none !important; }
@@ -778,8 +736,7 @@ body {
         {"proName":"TVC:USOIL","title":"WTI Crude"},
         {"proName":"NYSE:TTE","title":"TotalEnergies"},
         {"proName":"FX:EURUSD","title":"EUR/USD"},
-        {"proName":"FX:EURCHF","title":"EUR/CHF"},
-        {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"}
+        {"proName":"FX:EURCHF","title":"EUR/CHF"}
       ],
       "showSymbolLogo": false,
       "isTransparent": true,
@@ -835,45 +792,10 @@ body {
       <div class="yfw-chg"   id="mw-dubai-chg">$/bbl</div>
     </div>
 
-    <div class="yf-widget" id="mw-bdspread" onclick="showChart('medeco-brent-dub')" title="Brent/Dubai Spread — Medeco live" style="border-left:1px solid #2a3a4a">
-      <div class="yfw-name">B/D SPRD</div>
-      <div class="yfw-price" id="mw-bdspread-price">—</div>
-      <div class="yfw-chg"   id="mw-bdspread-chg">$/bbl</div>
-    </div>
-
-    <div class="yf-widget" id="mw-bwspread" onclick="showChart('medeco-wti-brent')" title="Brent/WTI Spread — Medeco live (Brent − WTI)" style="border-left:1px solid #2a3a4a">
-      <div class="yfw-name">B/W SPRD</div>
-      <div class="yfw-price" id="mw-bwspread-price">—</div>
-      <div class="yfw-chg"   id="mw-bwspread-chg">$/bbl</div>
-    </div>
-
-    <div class="yf-widget" id="mw-distcrk"  onclick="showChart('medeco-diesel-crack')"  title="Distillate Crack vs Brent — Medeco" style="border-left:1px solid #2a3a4a">
-      <div class="yfw-name" style="color:#38bdf8">DIST CRK</div>
-      <div class="yfw-price" id="mw-distcrk-price">—</div>
-      <div class="yfw-chg"   id="mw-distcrk-chg">$/bbl</div>
-    </div>
-
-    <div class="yf-widget" id="mw-naphcrk"  onclick="showChart('medeco-naphtha-crack')" title="Naphtha Crack vs Brent — Medeco" style="border-left:1px solid #2a3a4a">
-      <div class="yfw-name" style="color:#22d3ee">NAPH CRK</div>
-      <div class="yfw-price" id="mw-naphcrk-price">—</div>
-      <div class="yfw-chg"   id="mw-naphcrk-chg">$/bbl</div>
-    </div>
-
-    <div class="yf-widget" id="mw-vlsfocrk" onclick="showChart('medeco-vlsfo-crack')"   title="VLSFO Crack vs Brent — Medeco" style="border-left:1px solid #2a3a4a">
-      <div class="yfw-name" style="color:#fdba74">VLSFO CRK</div>
-      <div class="yfw-price" id="mw-vlsfocrk-price">—</div>
-      <div class="yfw-chg"   id="mw-vlsfocrk-chg">$/bbl</div>
-    </div>
-
-    <div class="yf-widget" id="mw-hsfocrk"  onclick="showChart('medeco-hsfo-crack')"    title="HSFO Crack vs Brent — Medeco" style="border-left:1px solid #2a3a4a">
-      <div class="yfw-name" style="color:#fb923c">HSFO CRK</div>
-      <div class="yfw-price" id="mw-hsfocrk-price">—</div>
-      <div class="yfw-chg"   id="mw-hsfocrk-chg">$/bbl</div>
-    </div>
-
     <!-- FED widget — separator + rate -->
     <div style="border-left:2px solid #2a3a4a;width:1px;margin:8px 0;flex-shrink:0"></div>
-    
+    <div class="yf-widget" id="mw-fed" title="US Federal Funds Rate — FRED API (Federal Reserve)" style="border-left:1px solid #2a3a4a;min-width:90px">
+      <div class="yfw-name" style="color:#a78bfa">FED RATE</div>
       <div class="yfw-price" id="mw-fed-rate" style="color:#a78bfa">—</div>
       <div class="yfw-chg"   id="mw-fed-date" style="color:#7c6fcd">loading…</div>
     </div>
@@ -997,16 +919,12 @@ body {
 
     <!-- ── DISTILLAT pills ── -->
     <span id="medeco-dist-pills" style="display:none">
-      <button class="pill medeco-pill" onclick="showChart('medeco-diesel-crack')"  style="border-color:rgba(34,211,238,.25);color:var(--dim)">DIESEL CRACK</button>
-      <button class="pill medeco-pill" onclick="showChart('medeco-distillate')"    style="border-color:rgba(34,211,238,.25);color:var(--dim)">DISTILLATE</button>
-      <button class="pill medeco-pill" onclick="showChart('distillate-stocks')"    style="border-color:rgba(79,195,247,.25);color:#4fc3f7">⚡ US STOCKS</button>
-      <button class="pill medeco-pill" onclick="showChart('jet-stocks')"           style="border-color:rgba(79,195,247,.25);color:#4fc3f7">⚡ US JET</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-diesel-crack')" style="border-color:rgba(34,211,238,.25);color:var(--dim)">DIESEL CRACK</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-distillate')"   style="border-color:rgba(34,211,238,.25);color:var(--dim)">DISTILLATE</button>
     </span>
 
     <!-- ── LNG pills ── -->
     <span id="medeco-lng-pills" style="display:none">
-      <button class="pill medeco-pill" onclick="showChart('lng-eu-storage')"   style="border-color:rgba(34,211,238,.35);color:#22d3ee">⚡ EU STORAGE</button>
-      <button class="pill medeco-pill" onclick="showChart('lng-eu-countries')" style="border-color:rgba(34,211,238,.25);color:var(--dim)">⚡ BY COUNTRY</button>
     </span>
 
     <!-- ── GASOLINE pills ── -->
@@ -1016,7 +934,6 @@ body {
       <button class="pill medeco-pill" onclick="showChart('medeco-lpg')"           style="border-color:rgba(74,222,128,.25);color:var(--dim)">LPG</button>
       <button class="pill medeco-pill" onclick="showChart('medeco-c3')"            style="border-color:rgba(74,222,128,.25);color:var(--dim)">C3</button>
       <button class="pill medeco-pill" onclick="showChart('medeco-c4')"            style="border-color:rgba(74,222,128,.25);color:var(--dim)">C4</button>
-      <button class="pill medeco-pill" onclick="showChart('gasoline-stocks')"   style="border-color:rgba(74,222,128,.25);color:#4ade80">⚡ US STOCKS</button>
     </span>
 
     <!-- ── FUEL OIL pills ── -->
@@ -1027,7 +944,6 @@ body {
       <button class="pill medeco-pill" onclick="showChart('medeco-hsfo-crack')"  style="border-color:rgba(251,146,60,.25);color:var(--dim)">HSFO CRACK</button>
       <button class="pill medeco-pill" onclick="showChart('medeco-lsfo')"        style="border-color:rgba(251,146,60,.25);color:var(--dim)">LSFO</button>
       <button class="pill medeco-pill" onclick="showChart('medeco-vgo')"         style="border-color:rgba(251,146,60,.25);color:var(--dim)">VGO</button>
-      <button class="pill medeco-pill" onclick="showChart('fueloil-stocks')"    style="border-color:rgba(251,146,60,.25);color:#fb923c">⚡ US STOCKS</button>
     </span>
 
     <!-- ── SHIPPING pills ── -->
@@ -1051,11 +967,6 @@ body {
 
   <!-- MAP -->
   <div id="map-wrap">
-  <!-- Mobile country toast -->
-  <div id="mob-country-toast" style="display:none;position:absolute;bottom:70px;left:50%;transform:translateX(-50%);
-    background:rgba(14,20,32,.95);border:1px solid var(--accent);padding:8px 16px;border-radius:20px;
-    font-size:11px;color:var(--text);z-index:1000;white-space:nowrap;
-    transition:opacity .3s;opacity:0;pointer-events:none"></div>
     <div id="leaflet-map"></div>
 
     <!-- Map Legend -->
@@ -1132,7 +1043,7 @@ body {
   <div id="side-panel">
     <div class="sp-head" style="position:relative">
       <!-- Mobile close button -->
-      <button id="mob-sp-close" onclick="mobCloseSidePanel()" style="display:none;position:sticky;top:8px;float:right;margin:4px 8px 0 0;z-index:100;background:rgba(14,20,32,.95);border:1px solid var(--accent);color:var(--dim);font-size:14px;width:28px;height:28px;border-radius:50%;cursor:pointer;font-family:inherit;line-height:1">✕</button>
+      <button id="mob-sp-close" onclick="mobCloseSidePanel()" style="display:none;position:absolute;top:8px;right:8px;background:none;border:1px solid var(--border);color:var(--dim);font-size:14px;width:28px;height:28px;border-radius:50%;cursor:pointer;font-family:inherit;line-height:1">✕</button>
       <div class="sp-head-label">SELECTED COUNTRY</div>
       <div class="sp-head-title" id="sp-country">—</div>
       <div class="sp-head-sub" id="sp-country-sub">Click a producer on the map</div>
@@ -1161,27 +1072,46 @@ body {
     <div class="bp-col-title">OPEC+ PRODUCTION BY COUNTRY (Mb/d · 2024)</div>
     <div class="bp-chart-wrap"><canvas id="bp-opec-country-chart"></canvas></div>
   </div>
-  <!-- OPEC+ OUTPUT, TOP IMPORTERS, GLOBAL BALANCE — loaded live from EIA -->
-  <div class="bp-col" id="bp-opec-output">
+  <div class="bp-col">
     <div class="bp-col-title">OPEC+ OUTPUT (Mb/d)</div>
-    <div class="bp-col-body" id="bp-opec-output-body">
-      <div style="color:var(--dim);font-size:9px;padding:8px 0">⚡ loading…</div>
+    <div class="bp-col-body">
+      <div class="bp-row"><span class="bp-key">Saudi Arabia</span><span class="bp-val" style="color:var(--accent)">9.0</span></div>
+      <div class="bp-row"><span class="bp-key">Russia</span><span class="bp-val" style="color:var(--accent)">9.2</span></div>
+      <div class="bp-row"><span class="bp-key">Iraq</span><span class="bp-val">4.2</span></div>
+      <div class="bp-row"><span class="bp-key">UAE</span><span class="bp-val">3.5</span></div>
+      <div class="bp-row"><span class="bp-key">Iran</span><span class="bp-val">3.4</span></div>
+      <div class="bp-row"><span class="bp-key">Kuwait</span><span class="bp-val">2.5</span></div>
+      <div class="bp-row"><span class="bp-key">OPEC+ cut</span><span class="bp-val" style="color:var(--accent2)">–2.2</span></div>
     </div>
   </div>
-  <div class="bp-col" id="bp-top-importers">
+  <div class="bp-col">
     <div class="bp-col-title">TOP IMPORTERS (Mb/d)</div>
-    <div class="bp-col-body" id="bp-importers-body">
-      <div style="color:var(--dim);font-size:9px;padding:8px 0">⚡ loading…</div>
+    <div class="bp-col-body">
+      <div class="bp-row"><span class="bp-key">China</span><span class="bp-val">11.1</span></div>
+      <div class="bp-row"><span class="bp-key">United States</span><span class="bp-val">8.3</span></div>
+      <div class="bp-row"><span class="bp-key">India</span><span class="bp-val">5.1</span></div>
+      <div class="bp-row"><span class="bp-key">Japan</span><span class="bp-val">2.8</span></div>
+      <div class="bp-row"><span class="bp-key">South Korea</span><span class="bp-val">2.7</span></div>
+      <div class="bp-row"><span class="bp-key">Germany</span><span class="bp-val">1.8</span></div>
+      <div class="bp-row"><span class="bp-key">Netherlands</span><span class="bp-val">1.2</span></div>
     </div>
   </div>
-  <div class="bp-col" id="bp-global-balance">
+  <div class="bp-col">
     <div class="bp-col-title">GLOBAL BALANCE</div>
-    <div class="bp-col-body" id="bp-balance-body">
-      <div style="color:var(--dim);font-size:9px;padding:8px 0">⚡ loading…</div>
+    <div class="bp-col-body">
+      <div class="bp-row"><span class="bp-key">Supply</span><span class="bp-val up">102.4 Mb/d</span></div>
+      <div class="bp-row"><span class="bp-key">Demand</span><span class="bp-val dn">101.8 Mb/d</span></div>
+      <div class="bp-row"><span class="bp-key">Surplus</span><span class="bp-val up">+0.6 Mb/d</span></div>
+      <div class="bp-row"><span class="bp-key">OECD Stocks</span><span class="bp-val">2,820 Mbbl</span></div>
+      <div class="bp-row"><span class="bp-key">US SPR</span><span class="bp-val dn">371 Mbbl</span></div>
+      <div class="bp-row"><span class="bp-key">Cover</span><span class="bp-val">27.7 days</span></div>
+      <div class="src">Source: EIA/IEA Q1-25</div>
     </div>
   </div>
+</div>
 
-<!-- AI Analyst Overlay -->
+
+    <!-- AI Analyst Overlay -->
     <div id="ai-overlay" class="overlay overlay-hidden">
       <div class="ov-head">
         <div>
@@ -1533,181 +1463,71 @@ const TICK_FALLBACK = [
   {n:"HORMUZ",     v:"21 Mb/d",   c:"CRITICAL",  d:"dn"},
   {n:"GLOBAL SUP", v:"102.4 Mb/d",c:"+0.6 sur",  d:"up"},
   {n:"CHINA IMP",  v:"11.1 Mb/d", c:"+3% YoY",  d:"up"},
+  {n:"FED RATE",   v:"—",         c:"loading",  d:""},
 ];
 
 // Yahoo Finance — uniquement pour RBOB et Heating Oil (Gasoil NYMEX)
 // Ces symboles ne sont PAS disponibles gratuitement sur TradingView → pas de doublon
 // ── FRED API (Federal Reserve St. Louis) ─────────────────────────────────────
-const FRED_API_KEY = '30f3e28802f893aa8bc8e9884184bc33';
+const FRED_API_KEY = '400ef621d8057b964fc22e05f650b6a6';
 const FRED_BASE    = 'https://api.stlouisfed.org/fred';
 
 async function fetchFedRate() {
-  // Try multiple FRED series in case one is down
-  // DFEDTARU = upper target, DFF = effective daily, FEDFUNDS = monthly effective
-  const series  = ['DFEDTARU', 'DFF', 'FEDFUNDS'];
-  const baseUrl = `https://api.stlouisfed.org/fred/series/observations`
-                + `?api_key=${FRED_API_KEY}&sort_order=desc&limit=5&file_type=json`;
-
-  for (const serie of series) {
-    try {
-      const resp = await fetch(`${baseUrl}&series_id=${serie}`,
-        { signal: AbortSignal.timeout(6000), mode: 'cors' });
-      if (!resp.ok) { console.warn(`[FED] ${serie} HTTP ${resp.status}`); continue; }
-      const j   = await resp.json();
-      const obs = (j.observations || []).filter(o => o.value !== '.' && o.value !== '');
-      if (!obs.length) continue;
-      const latest = obs[0];
-      const prev   = obs.find(o => o.value !== latest.value);
-      const rate   = parseFloat(latest.value);
-      const pRate  = prev ? parseFloat(prev.value) : rate;
-      const chg    = rate - pRate;
-      const chgTxt = chg === 0 ? 'UNCHANGED' : `${chg>0?'+':''}${(chg*100).toFixed(0)}bps`;
-      console.log(`[FED] ✓ ${serie}: ${rate}% as of ${latest.date} (${chgTxt})`);
-      return { rate, date: latest.date, chg, chgTxt, dir: chg>0?'up':chg<0?'dn':'' };
-    } catch(e) {
-      console.warn(`[FED] ${serie} failed:`, e.message);
-    }
-  }
-
-  // Proxy fallback (when medeco_proxy.py running locally)
+  // FEDFUNDS = monthly effective Fed Funds rate
+  // DFEDTARU = daily upper target rate (most recent FOMC decision)
+  const url = `${FRED_BASE}/series/observations?series_id=DFEDTARU&api_key=${FRED_API_KEY}&sort_order=desc&limit=5&file_type=json`;
+  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
   try {
-    const r = await fetch('http://localhost:8765/fred/rate',
-      { signal: AbortSignal.timeout(3000) });
-    if (r.ok) {
-      const d = await r.json();
-      if (d?.rate) return { rate:d.rate, date:d.date, chg:d.chg, chgTxt:d.chgTxt, dir:d.dir };
-    }
-  } catch(e) { /* proxy not running */ }
+    const r = await fetch(proxy, { signal: AbortSignal.timeout(8000) });
+    const j = await r.json();
+    const data = JSON.parse(j.contents);
+    const obs  = (data.observations || []).filter(o => o.value !== '.');
+    if (!obs.length) return null;
 
-  console.warn('[FED] All sources failed — FRED may be temporarily down (503)');
-  return null;
+    const latest  = obs[0];
+    const prev    = obs.find(o => o.value !== latest.value);
+    const rate    = parseFloat(latest.value);
+    const prevRate= prev ? parseFloat(prev.value) : null;
+    const chg     = prevRate != null ? rate - prevRate : 0;
+    const dir     = chg > 0 ? 'up' : chg < 0 ? 'dn' : '';
+    const chgTxt  = chg === 0
+      ? 'UNCHANGED'
+      : `${chg > 0 ? '+' : ''}${(chg * 100).toFixed(0)}bps`;
+
+    return { rate, date: latest.date, chg, chgTxt, dir };
+  } catch(e) {
+    console.warn('[FRED]', e.message);
+    return null;
+  }
 }
 
 async function refreshFedWidget() {
+  const data = await fetchFedRate();
+  if (!data) return;
+
   const pEl = document.getElementById('fw-fed-rate');
   const cEl = document.getElementById('fw-fed-chg');
   if (!pEl || !cEl) return;
 
-  const data = await fetchFedRate();
-  if (!data) { pEl.textContent = '—'; cEl.textContent = 'unavailable'; return; }
-
   pEl.textContent = data.rate.toFixed(2) + '%';
-  pEl.className   = 'yfw-price ' + (data.dir || '');
+  pEl.className   = 'yfw-price ' + data.dir;
   cEl.textContent = data.chgTxt;
-  cEl.className   = 'yfw-chg ' + (data.dir || '');
-  console.log(`[FED] ✓ ${data.rate}% ${data.chgTxt} (${data.date})`);
+  cEl.className   = 'yfw-chg ' + data.dir;
+
+  // Update scrolling ticker
+  tickerLiveData['FED RATE'] = {
+    price: data.rate.toFixed(2) + '%',
+    chg:   data.chgTxt,
+    dir:   data.dir,
+  };
+  renderTicker();
+  console.log(`[FRED] Fed rate: ${data.rate}% (${data.chgTxt}) as of ${data.date}`);
 }
 
 // ── Core Medeco configuration ────────────────────────────────────────────────
 // Set to your proxy URL when running medeco_proxy.py
 // Leave as 'http://localhost:8765/medeco' — proxy handles Kerberos auth
-// ╔══════════════════════════════════════════════════════════════╗
-// ║           MEDECO OAuth2 CONFIGURATION                       ║
-// ║  Remplace les 4 valeurs ci-dessous avec tes credentials     ║
-// ╚══════════════════════════════════════════════════════════════╝
-const MEDECO_OAUTH2 = {
-  CLIENT_ID:     'da096ca5-eb7d-4685-8474-3e51348b77d4',
-  CLIENT_SECRET: 'TON_CLIENT_SECRET_ICI',   // ← Remplace avec ton Client Secret
-  TENANT_ID:     '329e91b0-e21f-48fb-a071-456717ecc28e',
-  SCOPE:         'api://b01764f2-82d6-46d4-9d30-1ff964860f45/.default',
-};
-const MEDECO_API_URL = 'https://api-medeco.dts.corp.local/api'; // URL Medeco prod
-const MEDECO_BASE    = null; // Plus utilisé — remplacé par OAuth2 direct
-
-// Token cache
-let _medecoToken       = null;
-let _medecoTokenExpiry = 0;
-
-async function getMedecoToken() {
-  // Retourne le token en cache s'il est encore valide (buffer 60s)
-  if (_medecoToken && Date.now() < _medecoTokenExpiry - 60000) {
-    console.log('[OAuth2] Token en cache valide');
-    return _medecoToken;
-  }
-
-  // Vérifie que les credentials sont remplis
-  if (!MEDECO_OAUTH2.CLIENT_ID || MEDECO_OAUTH2.CLIENT_ID === 'TON_APP_ID_ICI') {
-    throw new Error('OAuth2: CLIENT_ID non configuré — remplace TON_APP_ID_ICI dans le code');
-  }
-  if (!MEDECO_OAUTH2.CLIENT_SECRET || MEDECO_OAUTH2.CLIENT_SECRET === 'TON_CLIENT_SECRET_ICI') {
-    throw new Error('OAuth2: CLIENT_SECRET non configuré — remplace TON_CLIENT_SECRET_ICI dans le code');
-  }
-
-  const tokenUrl = `https://login.microsoftonline.com/${MEDECO_OAUTH2.TENANT_ID}/oauth2/v2.0/token`;
-  console.log('[OAuth2] Fetching token from:', tokenUrl);
-  console.log('[OAuth2] client_id:', MEDECO_OAUTH2.CLIENT_ID);
-  console.log('[OAuth2] scope:', MEDECO_OAUTH2.SCOPE);
-
-  const body = new URLSearchParams({
-    grant_type:    'client_credentials',
-    client_id:     MEDECO_OAUTH2.CLIENT_ID,
-    client_secret: MEDECO_OAUTH2.CLIENT_SECRET,
-    scope:         MEDECO_OAUTH2.SCOPE,
-  });
-
-  try {
-    const resp = await fetch(tokenUrl, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body,
-      signal:  AbortSignal.timeout(10000),
-    });
-    const json = await resp.json();
-    if (!resp.ok) {
-      console.error('[OAuth2] ✗ Token error:', json);
-      throw new Error(`OAuth2 ${resp.status}: ${json.error} — ${json.error_description}`);
-    }
-    _medecoToken       = json.access_token;
-    _medecoTokenExpiry = Date.now() + (json.expires_in || 3600) * 1000;
-    console.log(`[OAuth2] ✓ Token obtenu, expire dans ${json.expires_in}s`);
-    return _medecoToken;
-  } catch(e) {
-    console.error('[OAuth2] ✗ Fetch failed:', e.message);
-    throw e;
-  }
-}
-
-async function medecoFetch(path, params={}) {
-  // Source 1: Proxy Python local (localhost:8765) — fonctionne avec Kerberos
-  const proxyBase = 'http://localhost:8765/medeco';
-  const proxyUrl  = new URL(proxyBase + '/values');
-  // Convert path /series/{serie}/values → proxy format ?serie=...
-  const serieMatch = path.match(/\/series\/([^\/]+)\/values/);
-  if (serieMatch) {
-    proxyUrl.searchParams.set('serie', decodeURIComponent(serieMatch[1]));
-    Object.entries(params).forEach(([k,v]) => proxyUrl.searchParams.set(k, v));
-    try {
-      const r = await fetch(proxyUrl.toString(), { signal: AbortSignal.timeout(10000) });
-      if (r.ok) {
-        const j = await r.json();
-        console.log(`[Medeco] ✓ proxy: ${path}`);
-        return j;
-      }
-    } catch(e) { /* proxy not running, try OAuth2 */ }
-  }
-
-  // Source 2: OAuth2 direct (fonctionne quand droits NWA actifs)
-  try {
-    const token = await getMedecoToken();
-    const url   = new URL(`${MEDECO_API_URL}${path}`);
-    Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
-    const resp  = await fetch(url.toString(), {
-      headers: { 'Authorization': `Bearer ${token}` },
-      signal:  AbortSignal.timeout(15000),
-    });
-    if (!resp.ok) {
-      const txt = await resp.text().catch(()=>'');
-      console.error(`[Medeco] ✗ OAuth2 ${resp.status}:`, txt.slice(0,150));
-      throw new Error(`Medeco ${resp.status}`);
-    }
-    const json = await resp.json();
-    console.log(`[Medeco] ✓ OAuth2: ${path}`);
-    return json;
-  } catch(e) {
-    console.error('[Medeco] ✗ all sources failed:', e.message);
-    throw e;
-  }
-}
+const MEDECO_BASE = 'http://localhost:8765/medeco';
 
 const SHAREPOINT_PRESS_URL = 'http://applications.dts.corp.local/rpt/press/TOTSAPressReports/Forms/Report%20by%20Date.aspx';
 
@@ -1716,20 +1536,15 @@ let tickerLiveData = {}; // label → {price, chg, dir}
 // ── Medeco header widgets — VGO, VLSFO, HSFO, Distillate, Dubai ─────────────
 // Fetched on page load + every 10 min. Uses /medeco/values?serie=... endpoint.
 const MEDECO_HEADER_WIDGETS = [
-  { serie: 'pr.GO01.CCNWEA@P.M',       label: 'VGO',        unit: '$/t',   priceId: 'mw-vgo-price',      chgId: 'mw-vgo-chg'      },
-  { serie: 'pr.FO05.PUMFD00@P.M',      label: 'VLSFO',      unit: '$/t',   priceId: 'mw-vlsfo-price',    chgId: 'mw-vlsfo-chg'    },
-  { serie: 'pr.FO35.BFROTT@P.M',       label: 'HSFO',       unit: '$/t',   priceId: 'mw-hsfo-price',     chgId: 'mw-hsfo-chg'     },
-  { serie: 'pr.KJ.CCNWEA@P.M',         label: 'Distillate', unit: '$/t',   priceId: 'mw-dist-price',     chgId: 'mw-dist-chg'     },
-  { serie: 'cr.DBAI.1LI@SP@P.M',       label: 'Dubai',      unit: '$/bbl', priceId: 'mw-dubai-price',    chgId: 'mw-dubai-chg'    },
-  { serie: 'cr.BRED.DTD@DUB@SP@P.M',   label: 'B/D Spread', unit: '$/bbl', priceId: 'mw-bdspread-price', chgId: 'mw-bdspread-chg' },
-  // Crack spreads — computed from two series (serieA/divisorA - serieB)
-  { crack:true, serieA:'pr.KJ.CCNWEA@P.M',    divisorA:7.46, serieB:'cr.BRED.DTD@SP@P.M', label:'DIST CRK',   unit:'$/bbl', priceId:'mw-distcrk-price',  chgId:'mw-distcrk-chg'  },
-  { crack:true, serieA:'pr.NA.CCNWEA@P.H',     divisorA:8.9,  serieB:'cr.BRED.DTD@SP@P.M', label:'NAPH CRK',   unit:'$/bbl', priceId:'mw-naphcrk-price',  chgId:'mw-naphcrk-chg'  },
-  { crack:true, serieA:'pr.FO05.PUMFD00@P.M',  divisorA:6.35, serieB:'cr.BRED.DTD@SP@P.M', label:'VLSFO CRK',  unit:'$/bbl', priceId:'mw-vlsfocrk-price', chgId:'mw-vlsfocrk-chg' },
-  { crack:true, serieA:'pr.FO35.BFROTT@P.M',   divisorA:6.35, serieB:'cr.BRED.DTD@SP@P.M', label:'HSFO CRK',   unit:'$/bbl', priceId:'mw-hsfocrk-price',  chgId:'mw-hsfocrk-chg'  },
+  { serie: 'pr.GO01.CCNWEA@P.M',  label: 'VGO',        unit: '$/t',   priceId: 'mw-vgo-price',   chgId: 'mw-vgo-chg'   },
+  { serie: 'pr.FO05.PUMFD00@P.M', label: 'VLSFO',      unit: '$/t',   priceId: 'mw-vlsfo-price', chgId: 'mw-vlsfo-chg' },
+  { serie: 'pr.FO35.BFROTT@P.M',  label: 'HSFO',       unit: '$/t',   priceId: 'mw-hsfo-price',  chgId: 'mw-hsfo-chg'  },
+  { serie: 'pr.KJ.CCNWEA@P.M',    label: 'Distillate', unit: '$/t',   priceId: 'mw-dist-price',  chgId: 'mw-dist-chg'  },
+  { serie: 'cr.DBAI.1LI@SP@P.M',  label: 'Dubai',      unit: '$/bbl', priceId: 'mw-dubai-price', chgId: 'mw-dubai-chg' },
 ];
 
 async function refreshMedecoHeaderWidgets() {
+  if (!MEDECO_BASE) return; // proxy not running
 
   const today    = new Date();
   const fromDate = new Date(); fromDate.setMonth(fromDate.getMonth() - 1);
@@ -1737,120 +1552,118 @@ async function refreshMedecoHeaderWidgets() {
 
   await Promise.allSettled(MEDECO_HEADER_WIDGETS.map(async w => {
     try {
-      // ── Crack spread: fetch two series, compute A/divA - B ──
-      if (w.crack) {
-        const [jA, jB] = await Promise.all([
-          medecoFetch(`/series/${encodeURIComponent(w.serieA)}/values`, { from: fmt(fromDate), to: fmt(today) }),
-          medecoFetch(`/series/${encodeURIComponent(w.serieB)}/values`, { from: fmt(fromDate), to: fmt(today) }),
-        ]);
-        const lA = jA.latest, lB = jB.latest;
-        if (!lA || !lB) return;
-        const val  = +((lA.value / w.divisorA) - lB.value).toFixed(2);
-        const prev = +(((lA.value - lA.change) / w.divisorA) - (lB.value - lB.change)).toFixed(2);
-        const chg  = +(val - prev).toFixed(2);
-        const dir  = chg >= 0 ? 'up' : 'dn';
-        const sign = chg >= 0 ? '+' : '';
-        const pEl  = document.getElementById(w.priceId);
-        const cEl  = document.getElementById(w.chgId);
-        if (pEl) { pEl.textContent = val.toFixed(2); pEl.className = 'yfw-price ' + dir; }
-        if (cEl) { cEl.textContent = `${sign}${chg.toFixed(2)}`; cEl.className = 'yfw-chg ' + dir; }
-        return;
-      }
-      // ── Simple series ──────────────────────────────────────────
-      const json = await medecoFetch(
-        `/series/${encodeURIComponent(w.serie)}/values`,
-        { from: fmt(fromDate), to: fmt(today) }
-      ).catch(() => null);
-      if (!json) return;
+      const url  = `${MEDECO_BASE}/values?serie=${encodeURIComponent(w.serie)}&from=${fmt(fromDate)}&to=${fmt(today)}`;
+      const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
+      if (!resp.ok) return;
+      const json = await resp.json();
       const lat  = json.latest;
       if (!lat) return;
+
       const pEl = document.getElementById(w.priceId);
       const cEl = document.getElementById(w.chgId);
       if (!pEl || !cEl) return;
-      const dir      = lat.direction === 'up' ? 'up' : 'dn';
-      const isSpread = w.label.includes('Spread');
-      pEl.textContent = isSpread ? lat.value.toFixed(2) : Math.round(lat.value).toString();
+
+      const dir = lat.direction === 'up' ? 'up' : 'dn';
+      pEl.textContent = Math.round(lat.value).toString();
       pEl.className   = 'yfw-price ' + dir;
+
       const sign = lat.change >= 0 ? '+' : '';
-      const chgTxt = isSpread ? lat.change.toFixed(2) : Math.round(lat.change).toString();
-      cEl.textContent = `${sign}${chgTxt} (${lat.changePct >= 0?'+':''}${lat.changePct.toFixed(1)}%)`;
+      cEl.textContent = `${sign}${Math.round(lat.change)} (${lat.changePct >= 0 ? '+' : ''}${lat.changePct.toFixed(1)}%)`;
       cEl.className   = 'yfw-chg ' + dir;
-      tickerLiveData[w.label] = { price: `${Math.round(lat.value)} ${w.unit}`, chg: `${sign}${Math.round(lat.change)}`, dir };
+
+      // Also store in tickerLiveData for scrolling ticker
+      tickerLiveData[w.label] = {
+        price: `${Math.round(lat.value)} ${w.unit}`,
+        chg:   `${sign}${Math.round(lat.change)}`,
+        dir,
+      };
     } catch(e) { /* silent — proxy may not be running */ }
   }));
 
-
-  // ── WTI/Brent Future spread — fu.WTIBR.E1.C direct Medeco series ──
-  try {
-    const j = await medecoFetch(
-      `/series/${encodeURIComponent('fu.WTIBR.E1.C')}/values`,
-      { from: fmt(fromDate), to: fmt(today) }
-    ).catch(()=>null);
-    if (j) {
-      const lat = j.latest;
-      if (lat) {
-        const val  = +lat.value.toFixed(2);
-        const chg  = +lat.change.toFixed(2);
-        const dir  = lat.direction === 'up' ? 'up' : 'dn';
-        const sign = chg >= 0 ? '+' : '';
-        const pEl  = document.getElementById('mw-bwspread-price');
-        const cEl  = document.getElementById('mw-bwspread-chg');
-        if (pEl) { pEl.textContent = val.toFixed(2); pEl.className = 'yfw-price ' + dir; }
-        if (cEl) { cEl.textContent = `${sign}${chg.toFixed(2)}`; cEl.className = 'yfw-chg ' + dir; }
-        console.log(`[SPREAD] WTI/Brent fut: ${val} (${sign}${chg})`);
-      }
-    }
-  } catch(e) { console.warn('[SPREAD] WTI/Brent fut failed:', e.message); }
+  renderTicker();
 }
 // TradingView Ticker Tape widget handles live prices in the banner above.
-const MEDECO_SERIES = [
-  {serie:"cr.BRED.DTD@SP@P.M",       label:"Brent Dated",   unit:"$/bbl"},
-  {serie:"cr.NINI.AAVJB00@P.M",      label:"Brent Spot",    unit:"$/bbl"},
-  {serie:"fu.BR.E1.M",               label:"Brent Fwd 1m",  unit:"$/bbl"},
-  {serie:"cr.WTIM.WMCRB00@P.M",      label:"WTI",           unit:"$/bbl"},
-  {serie:"fu.WTIBR.E1.C",            label:"WTI/Brent Fut", unit:"$/bbl"},
-  {serie:"cr.DBAI.1LI@SP@P.M",       label:"Dubai",         unit:"$/bbl"},
-  {serie:"cr.OMAN.1LI@SP@P.M",       label:"Oman",          unit:"$/bbl"},
-  {serie:"cr.MURB.SP@P.M",           label:"Murban",        unit:"$/bbl"},
-  {serie:"cr.BRED.DTD@DUB@SP@P.M",   label:"Brent/Dubai",   unit:"$/bbl"},
-  {serie:"cr.FORT.D@SP@P.M",         label:"Forties",       unit:"$/bbl"},
-  {serie:"cr.EKOF.D@SP@P.M",         label:"Ekofisk",       unit:"$/bbl"},
-  {serie:"cr.OSEB.D@SP@P.M",         label:"Oseberg",       unit:"$/bbl"},
-  {serie:"cr.TROL.AAWEY00@P.M",      label:"Troll",         unit:"$/bbl"},
-  {serie:"cr.JOHS.AJSVB00@P.M",      label:"Johan Sverdrup",unit:"$/bbl"},
-  {serie:"cr.BSM.SP@BGR.M",          label:"Basra",         unit:"$/bbl"},
-  {serie:"cr.SAM.SP@BGR.M",          label:"Sahara Blend",  unit:"$/bbl"},
-  {serie:"pr.GULSD.BFROTT@P@10.M",   label:"Diesel",        unit:"$/mt"},
-  {serie:"pr.NA.CCNWEA@P.H",         label:"Naphtha",       unit:"$/mt"},
-  {serie:"pr.KJ.CCNWEA@P.M",         label:"Distillate",    unit:"$/mt"},
-  {serie:"pr.GO01.CCNWEA@P.M",       label:"VGO",           unit:"$/mt"},
-  {serie:"pr.FO05.PUMFD00@P.M",      label:"VLSFO",         unit:"$/mt"},
-  {serie:"pr.FO35.BFROTT@P.M",       label:"HSFO",          unit:"$/mt"},
-  {serie:"pr.FO10.CCNWEG@P.M",       label:"LSFO",          unit:"$/mt"},
-  {serie:"pr.MG.NWE@NOXY@AR.M",      label:"Gasoline NWE",  unit:"$/mt"},
-  {serie:"pr.LPGP.LCNWEA@AR.M",      label:"LPG/C3/C4",     unit:"$/mt"},
-  {serie:"fr.CFAF.FSFRM00@P.C",      label:"FAF",           unit:"$/mt"},
-  {serie:"fr.TD7.WD@BITR@WS.M",      label:"TD7 NSEA",      unit:"WS"},
-  {serie:"fr.TD25.WD@BITR@WS.M",     label:"TD25",          unit:"WS"},
-];
-
 // Medeco: use /bulk endpoint on startup — one single request instead of 6 parallel
 // ones, which was causing SSPI Kerberos context collision on Windows.
+/* ════════════════════════════════════════════════════════════════
+   FRED API — Federal Reserve Interest Rate
+   Source: Federal Reserve Bank of St. Louis (FRED)
+   Series: FEDFUNDS = Effective Federal Funds Rate (monthly)
+   No API key required for CSV endpoint
+════════════════════════════════════════════════════════════════ */
+async function fetchFedRate() {
+  // FRED public CSV endpoint — no key needed, uses allorigins CORS proxy
+  const fredUrl  = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=FEDFUNDS';
+  const proxy    = `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`;
+
+  try {
+    const resp = await fetch(proxy, { signal: AbortSignal.timeout(8000) });
+    if (!resp.ok) throw new Error('FRED HTTP ' + resp.status);
+    const text = await resp.text();
+
+    // CSV format: DATE,FEDFUNDS → 2024-01-01,5.33 (monthly)
+    const lines = text.trim().split('\n').filter(l => l && !l.startsWith('DATE'));
+    if (!lines.length) throw new Error('FRED: no data');
+
+    // Last line = most recent
+    const last = lines[lines.length - 1].split(',');
+    const prev = lines.length > 1 ? lines[lines.length - 2].split(',') : null;
+    const date  = last[0];   // e.g. "2025-01-01"
+    const rate  = parseFloat(last[1]);
+    const prevRate = prev ? parseFloat(prev[1]) : rate;
+    const chg   = +(rate - prevRate).toFixed(2);
+    const dir   = chg > 0 ? 'up' : chg < 0 ? 'dn' : '';
+
+    // Format date as "Jan 2025"
+    const d = new Date(date + 'T00:00:00');
+    const dateLabel = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+    // Update header widget
+    const rateEl = document.getElementById('mw-fed-rate');
+    const dateEl = document.getElementById('mw-fed-date');
+    if (rateEl) {
+      rateEl.textContent = rate.toFixed(2) + '%';
+      rateEl.className = 'yfw-price' + (dir ? ' ' + dir : '');
+    }
+    if (dateEl) {
+      const chgStr = chg !== 0 ? ` (${chg > 0 ? '+' : ''}${chg.toFixed(2)}%)` : ' (unchanged)';
+      dateEl.textContent = dateLabel + chgStr;
+      dateEl.className = 'yfw-chg' + (dir ? ' ' + dir : '');
+    }
+
+    // Update scrolling ticker
+    tickerLiveData['FED RATE'] = {
+      price: rate.toFixed(2) + '%',
+      chg:   chg !== 0 ? `${chg > 0 ? '+' : ''}${chg.toFixed(2)}bps` : 'UNCHANGED',
+      dir,
+    };
+    renderTicker();
+
+    console.log(`[FRED] Fed Funds Rate: ${rate}% as of ${date} (prev: ${prevRate}%)`);
+    return { rate, date, chg, dir, dateLabel };
+
+  } catch(e) {
+    console.warn('[FRED] fetchFedRate failed:', e.message);
+    // Fallback: show last known rate from public knowledge
+    const rateEl = document.getElementById('mw-fed-rate');
+    const dateEl = document.getElementById('mw-fed-date');
+    if (rateEl) { rateEl.textContent = '4.33%'; rateEl.className = 'yfw-price'; }
+    if (dateEl) { dateEl.textContent = 'Jan 2025 (cached)'; }
+    tickerLiveData['FED RATE'] = { price: '4.33%', chg: 'Jan 2025', dir: '' };
+    renderTicker();
+    return null;
+  }
+}
+
 async function prefetchMedecoBulk() {
-  // Runs with proxy or OAuth2
+  if(!MEDECO_BASE) return;
   const series = MEDECO_SERIES.map(s => s.serie).join(',');
   const today  = new Date();
   const from   = new Date(); from.setMonth(from.getMonth() - 1);
   const fmt    = d => d.toISOString().slice(0,10);
   try {
-    const r = await (async () => {
-      const token = await getMedecoToken();
-      const u = new URL(`${MEDECO_API_URL}/bulk`);
-      u.searchParams.set('series', series);
-      u.searchParams.set('from', fmt(from));
-      u.searchParams.set('to', fmt(today));
-      return fetch(u.toString(), { headers: {'Authorization': `Bearer ${await getMedecoToken()}`}, signal: AbortSignal.timeout(15000) });
-    })();
+    const url = `${MEDECO_BASE}/bulk?series=${encodeURIComponent(series)}&from=${fmt(from)}&to=${fmt(today)}`;
+    const r   = await fetch(url, {signal: AbortSignal.timeout(15000)});
     const j   = await r.json();
     if(j.series) {
       Object.entries(j.series).forEach(([serie, data]) => {
@@ -1869,9 +1682,11 @@ async function prefetchMedecoBulk() {
 // Fire after a short delay to let the page render first
 setTimeout(prefetchMedecoBulk, 1500);
 
-// Fed rate — call immediately + refresh every 30 min
-refreshFedWidget();
-setInterval(refreshFedWidget, 30 * 60 * 1000);
+// Fed rate widget — FRED API, refreshed every 30 min
+setTimeout(() => {
+  refreshFedWidget();
+  setInterval(refreshFedWidget, 30 * 60 * 1000);
+}, 1000);
 
 // Medeco header widgets — VGO, VLSFO, HSFO, Distillate, Dubai
 // Loaded after proxy startup delay, refreshed every 10 min
@@ -1944,16 +1759,9 @@ function selectCountry(name){
   clearFlows();
   activeCountryName = name;
   const d = COUNTRIES[name];
-  // On mobile: open side panel only if user taps a button
-  // Don't auto-open — it covers the tab bar
+  // On mobile: open side panel drawer
   if(typeof isMobile === 'function' && isMobile()) {
-    // Show a small toast notification instead
-    const toast = document.getElementById('mob-country-toast');
-    if(toast) {
-      toast.textContent = name + ' — tap ℹ️ for details';
-      toast.style.opacity = '1';
-      setTimeout(() => toast.style.opacity = '0', 2500);
-    }
+    setTimeout(() => mobOpenSidePanel(), 50);
   }
 
   // Draw flows
@@ -2610,27 +2418,7 @@ async function buildEIAChart(chartKey) {
     unit  = 'Mb/d'; label = 'Imports'; color = '#a855f7';
   }
 
-  if (chartKey === 'distillate-stocks') {
-    rows = await fetchEIADistillateStocks();
-    title = 'US DISTILLATE STOCKS — EIA LIVE (Mbbl)';
-    unit  = 'Mbbl'; label = 'Distillate Stocks'; color = '#38bdf8';
-  }
-  if (chartKey === 'fueloil-stocks') {
-    rows = await fetchEIAFuelOilStocks();
-    title = 'US FUEL OIL STOCKS — EIA LIVE (Mbbl)';
-    unit  = 'Mbbl'; label = 'Fuel Oil Stocks'; color = '#fb923c';
-  }
-  if (chartKey === 'gasoline-stocks') {
-    rows = await fetchEIAGasolineStocks();
-    title = 'US GASOLINE STOCKS — EIA LIVE (Mbbl)';
-    unit  = 'Mbbl'; label = 'Gasoline Stocks'; color = '#4ade80';
-  }
-  if (chartKey === 'jet-stocks') {
-    rows = await fetchEIAKeroJetStocks();
-    title = 'US JET FUEL STOCKS — EIA LIVE (Mbbl)';
-    unit  = 'Mbbl'; label = 'Jet Fuel Stocks'; color = '#818cf8';
-  }
-    if (!rows || !rows.length) {
+  if (!rows || !rows.length) {
     av.innerHTML = `<div style="height:100%;display:flex;align-items:center;justify-content:center;
       flex-direction:column;gap:10px;color:var(--dim)">
       <div style="font-size:20px">⚠️</div>
@@ -2799,15 +2587,6 @@ const CHART_CONFIGS = {
     eiaKey:'imports',
     build:(ctx)=>{ /* replaced by buildEIAChart */ }
   },
-  // ── LNG / GIE AGSI+ Charts ──────────────────────────────────────
-  'lng-eu-storage':   { title:'EU GAS STORAGE (% full)', meta:'GIE AGSI+ · Daily', gieKey:'eu-storage'    },
-  'lng-eu-countries': { title:'EU GAS STORAGE BY COUNTRY', meta:'GIE AGSI+ · Daily', gieKey:'eu-countries' },
-  // ── EIA Product Stock Charts ──────────────────────────────────────
-  'distillate-stocks':{ title:'US DISTILLATE STOCKS (Mbbl)', meta:'EIA Weekly · WDISTUS1', eiaKey:'distillate-stocks' },
-  'fueloil-stocks':   { title:'US FUEL OIL STOCKS (Mbbl)',   meta:'EIA Weekly · WFUELOS1', eiaKey:'fueloil-stocks'    },
-  'gasoline-stocks':  { title:'US GASOLINE STOCKS (Mbbl)',   meta:'EIA Weekly · WGTSTUS1', eiaKey:'gasoline-stocks'   },
-  'jet-stocks':       { title:'US JET FUEL STOCKS (Mbbl)',   meta:'EIA Weekly · WKJSTUS1', eiaKey:'jet-stocks'        },
-  // ────────────────────────────────────────────────────────────────
   balance:{
     title:'GLOBAL OIL SUPPLY vs DEMAND (Mb/d)',
     meta:'Annual · 2015–2025e · Source: IEA OMR Feb 2025',
@@ -2912,12 +2691,13 @@ const CHART_CONFIGS = {
 
   // ── DISTILLAT ─────────────────────────────────────────────────
   'medeco-diesel-crack': {
-    title:'DISTILLATE CRACK vs BRENT ($/bbl)',
-    meta:'pr.KJ.CCNWEA@P.M / 7.46  −  cr.BRED.DTD@SP@P.M',
-    medecoLabel:'Distillate Crack', medecoColor:'#38bdf8', medecoUnit:'$/bbl',
+    title:'DIESEL CRACK vs BRENT ($/bbl)',
+    meta:'pr.GULSD.BFROTT@P@10.M / 7.46  −  cr.BRED.DTD@SP@P.M',
+    medecoLabel:'Diesel Crack', medecoColor:'#38bdf8', medecoUnit:'$/bbl',
+    // crack mode: fetch A and B separately, compute A/divisorA - B
     crack: true,
-    medecoA:'pr.KJ.CCNWEA@P.M', divisorA: 7.46,
-    medecoB:'cr.BRED.DTD@SP@P.M', divisorB: 1,
+    medecoA:'pr.GULSD.BFROTT@P@10.M', divisorA: 7.46,
+    medecoB:'cr.BRED.DTD@SP@P.M',     divisorB: 1,
   },
   'medeco-distillate': {
     title:'DISTILLATE NWE ($/t)', meta:'Source: Medeco · pr.KJ.CCNWEA@P.M',
@@ -2925,7 +2705,7 @@ const CHART_CONFIGS = {
   },
 
   // ── GASOLINE ──────────────────────────────────────────────────
-    'medeco-naphtha-crack': {
+  'medeco-naphtha-crack': {
     title:'NAPHTHA CRACK vs BRENT ($/bbl)',
     meta:'pr.NA.CCNWEA@P.H / 8.9  −  cr.BRED.DTD@SP@P.M',
     medecoLabel:'Naphtha Crack', medecoColor:'#22d3ee', medecoUnit:'$/bbl',
@@ -2933,10 +2713,9 @@ const CHART_CONFIGS = {
     medecoA:'pr.NA.CCNWEA@P.H', divisorA: 8.9,
     medecoB:'cr.BRED.DTD@SP@P.M', divisorB: 1,
   },
-    'medeco-gasoline': {
-    title:'NAPHTHA NWE ($/t)',
-    meta:'Source: Medeco · pr.NA.CCNWEA@P.H',
-    medeco:'pr.NA.CCNWEA@P.H', medecoLabel:'Naphtha', medecoColor:'#22d3ee', medecoUnit:'$/t',
+  'medeco-gasoline': {
+    title:'GASOLINE NWE ($/t)', meta:'Source: Medeco · pr.MG.NWE@NOXY@AR.M',
+    medeco:'pr.MG.NWE@NOXY@AR.M', medecoLabel:'Gasoline NWE', medecoColor:'#86efac', medecoUnit:'$/t'
   },
   'medeco-lpg': {
     title:'LPG NWE ($/t)', meta:'Source: Medeco · pr.LPGP.LCNWEA@AR.M',
@@ -3109,11 +2888,7 @@ function showChart(key){
   av.innerHTML = '<canvas id="main-chart"></canvas>';
   const ctx = document.getElementById('main-chart');
 
-  if(conf.gieKey){
-    // GIE AGSI+ gas storage chart
-    buildGIEChart(conf.gieKey);
-    return;
-  } else if(conf.eiaKey){
+  if(conf.eiaKey){
     // EIA live data chart
     buildEIAChart(conf.eiaKey);
     return; // early return — buildEIAChart handles its own canvas
@@ -3121,13 +2896,11 @@ function showChart(key){
     // UN Comtrade live trade flows
     buildComtradeChart(conf.comtradeMode);
     return;
-  } else if(conf.medeco || conf.crack){
-    // Medeco internal live series (simple or crack spread)
+  } else if(conf.medeco){
+    // Medeco internal live series
     buildMedecoChart(ctx, conf);
   } else if(conf.build) {
     setTimeout(()=>{ currentMainChart = conf.build(ctx); },30);
-    // Trigger live KPI loading for balance panel
-    if(key === 'balance') setTimeout(() => loadBalanceKPIs(currentMode), 100);
   }
 
   document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
@@ -3228,7 +3001,7 @@ async function buildMedecoChart(_ignored, conf){
   }
 
   // ── Guard: proxy not configured ─────────────────────────────────
-  if(!MEDECO_OAUTH2.CLIENT_ID){
+  if(!MEDECO_BASE){
     av.innerHTML = `
       <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
         <div style="font-size:28px">📡</div>
@@ -3268,11 +3041,15 @@ async function buildMedecoChart(_ignored, conf){
 
   // Helper: fetch one serie and return chartData array [{x,y}]
   async function fetchSerie(serie){
-    // Appel direct Medeco via OAuth2
-    const path   = `/series/${encodeURIComponent(serie)}/values`;
-    const params = { from: fmt(fromDate), to: fmt(toDate) };
-    console.log('[MEDECO] OAuth2 fetch:', serie);
-    const json = await medecoFetch(path, params);
+    const url = `${MEDECO_BASE}/values?serie=${encodeURIComponent(serie)}&from=${fmt(fromDate)}&to=${fmt(toDate)}`;
+    console.log('[MEDECO] Fetching:', url);
+    const resp = await fetch(url, { signal: AbortSignal.timeout(20000) });
+    if(!resp.ok) {
+      let detail = '';
+      try { const j = await resp.json(); detail = j.detail || j.error || ''; } catch(e2){}
+      throw new Error(`HTTP ${resp.status} on ${serie}${detail ? ' — '+detail : ''}`);
+    }
+    const json = await resp.json();
     // Try chartData first, fallback to raw values[]
     let pts = json.chartData || [];
     if(!pts.length && json.values && json.values.length){
@@ -3320,10 +3097,13 @@ async function buildMedecoChart(_ignored, conf){
     }
 
     // ── SIMPLE SERIE MODE ──────────────────────────────────────────
-    const json = await medecoFetch(
-      `/series/${encodeURIComponent(conf.medeco)}/values`,
-      { from: fmt(fromDate), to: fmt(toDate) }
-    );
+    const url = `${MEDECO_BASE}/values?serie=${encodeURIComponent(conf.medeco)}&from=${fmt(fromDate)}&to=${fmt(toDate)}`;
+    console.log('[MEDECO] Fetching:', url);
+
+    const resp = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    if(!resp.ok) throw new Error(`HTTP ${resp.status} — ${resp.statusText}`);
+
+    const json = await resp.json();
     console.log('[MEDECO] Response:', json.serie, '→', json.chartData?.length, 'points, latest:', json.latest);
 
     const chartData = json.chartData || [];
@@ -3384,12 +3164,17 @@ const RSS_FEEDS = [
    cat:'OFFICIAL'},
   {name:'IEA News',    url:'https://www.iea.org/news/rss',
    cat:'OFFICIAL'},
-
+  {name:'IEA Reports', url:'https://www.iea.org/reports/rss',
+   cat:'OFFICIAL'},
   {name:'OPEC',        url:'https://www.opec.org/opec_web/en/press_room/rss.htm',
    cat:'OFFICIAL'},
 
   // ── Finance & commodités ───────────────────────────────────────
   {name:'Reuters',     url:'https://feeds.reuters.com/reuters/commoditiesNews',
+   cat:'FINANCE'},
+  {name:'MarketWatch', url:'https://feeds.marketwatch.com/marketwatch/marketpulse/',
+   cat:'FINANCE'},
+  {name:'Investing',   url:'https://www.investing.com/rss/news_285.rss',
    cat:'FINANCE'},
 
   // ── Offshore & technique ───────────────────────────────────────
@@ -3461,7 +3246,7 @@ function renderNewsItem(item){
    Proxies tried in order: rss2json → allorigins → corsproxy.io
    LocalStorage cache: 5min TTL, survives page reloads
 ═══════════════════════════════════════════════════════════════ */
-const RSS_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+const RSS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 function _rssMapItem(it, feedDef, source='json') {
   const pub  = source === 'json' ? it.pubDate : it.querySelector('pubDate')?.textContent;
@@ -3485,101 +3270,91 @@ function _rssMapItem(it, feedDef, source='json') {
   };
 }
 
-async function _tryAllOriginsGet(feedDef) {
-  // allorigins /get — JSON wrapper, most reliable from GitHub Pages
-  const url = `https://api.allorigins.win/get?url=${encodeURIComponent(feedDef.url)}`;
-  const r   = await fetch(url, { signal: AbortSignal.timeout(8000) });
-  if (!r.ok) throw new Error('allorigins/get ' + r.status);
-  const j    = await r.json();
-  const text = j.contents || '';
-  if (!text) throw new Error('allorigins/get empty');
-  const xml   = new DOMParser().parseFromString(text, 'application/xml');
-  const items = [...xml.querySelectorAll('item')].slice(0, 15);
-  if (!items.length) throw new Error('allorigins/get no items');
-  return items.map(it => _rssMapItem(it, feedDef, 'xml'));
-}
-
-async function _tryAllOriginsRaw(feedDef) {
-  // allorigins /raw — direct response, faster when it works
-  const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(feedDef.url)}`;
-  const r   = await fetch(url, { signal: AbortSignal.timeout(8000) });
-  if (!r.ok) throw new Error('allorigins/raw ' + r.status);
-  const text  = await r.text();
-  const xml   = new DOMParser().parseFromString(text, 'application/xml');
-  const items = [...xml.querySelectorAll('item')].slice(0, 15);
-  if (!items.length) throw new Error('allorigins/raw no items');
-  return items.map(it => _rssMapItem(it, feedDef, 'xml'));
-}
-
 async function _tryRss2json(feedDef) {
-  // rss2json — free tier, works for feeds in their whitelist
-  const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedDef.url)}&count=15`;
-  const r   = await fetch(url, { signal: AbortSignal.timeout(6000) });
-  if (!r.ok) throw new Error('rss2json ' + r.status);
-  const j   = await r.json();
-  if (j.status !== 'ok' || !j.items?.length) throw new Error('rss2json: ' + (j.message || 'no items'));
+  const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedDef.url)}&count=12`;
+  const r = await fetch(api, {signal: AbortSignal.timeout(6000)});
+  if(!r.ok) throw new Error('rss2json HTTP '+r.status);
+  const j = await r.json();
+  if(j.status !== 'ok' || !j.items?.length) throw new Error('rss2json no items');
   return j.items.map(it => _rssMapItem(it, feedDef, 'json'));
 }
 
-async function _tryCorsProxyIo(feedDef) {
-  // corsproxy.io — last resort
-  const url = `https://corsproxy.io/?url=${encodeURIComponent(feedDef.url)}`;
-  const r   = await fetch(url, { signal: AbortSignal.timeout(7000) });
-  if (!r.ok) throw new Error('corsproxy.io ' + r.status);
-  const text  = await r.text();
-  const xml   = new DOMParser().parseFromString(text, 'application/xml');
-  const items = [...xml.querySelectorAll('item')].slice(0, 15);
-  if (!items.length) throw new Error('corsproxy.io no items');
+async function _tryAllOrigins(feedDef) {
+  const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(feedDef.url)}`;
+  const r = await fetch(proxy, {signal: AbortSignal.timeout(7000)});
+  if(!r.ok) throw new Error('allorigins HTTP '+r.status);
+  const text = await r.text();
+  const xml = new DOMParser().parseFromString(text, 'application/xml');
+  const items = [...xml.querySelectorAll('item')].slice(0,12);
+  if(!items.length) throw new Error('allorigins no items');
   return items.map(it => _rssMapItem(it, feedDef, 'xml'));
 }
 
-async function _tryLocalProxy(feedDef) {
-  // Local Medeco proxy — only works when medeco_proxy.py is running
-  const url = `http://localhost:8765/rss/fetch?url=${encodeURIComponent(feedDef.url)}`;
-  const r   = await fetch(url, { signal: AbortSignal.timeout(4000) });
-  if (!r.ok) throw new Error('local proxy ' + r.status);
-  const text  = await r.text();
-  const xml   = new DOMParser().parseFromString(text, 'application/xml');
-  const items = [...xml.querySelectorAll('item')].slice(0, 15);
-  if (!items.length) throw new Error('local proxy no items');
+async function _tryCorsProxy(feedDef) {
+  const proxy = `https://corsproxy.io/?${encodeURIComponent(feedDef.url)}`;
+  const r = await fetch(proxy, {signal: AbortSignal.timeout(7000)});
+  if(!r.ok) throw new Error('corsproxy HTTP '+r.status);
+  const text = await r.text();
+  const xml = new DOMParser().parseFromString(text, 'application/xml');
+  const items = [...xml.querySelectorAll('item')].slice(0,12);
+  if(!items.length) throw new Error('corsproxy no items');
   return items.map(it => _rssMapItem(it, feedDef, 'xml'));
 }
 
-async function _fetchWithFallback(feedDef, cacheKey) {
-  // Check cache first
+async function parseFeed(feedDef) {
+  // 1. Check localStorage cache first
+  const cacheKey = 'rss_' + feedDef.name;
   try {
-    const raw    = localStorage.getItem(cacheKey);
-    const cached = raw ? JSON.parse(raw) : null;
-    if (cached && Date.now() - cached.ts < RSS_CACHE_TTL && cached.items?.length) {
-      return cached.items;
+    const cached = localStorage.getItem(cacheKey);
+    if(cached) {
+      const {ts, items} = JSON.parse(cached);
+      if(Date.now() - ts < RSS_CACHE_TTL && items?.length) {
+        // Return cached immediately, but schedule background refresh
+        _scheduleBgRefresh(feedDef, cacheKey);
+        return items;
+      }
     }
   } catch(e) {}
 
-  // Proxy chain — allorigins first (most reliable from GitHub Pages & localhost)
-  // Local proxy included at end for when medeco_proxy.py is running
-  const isHttps  = location.protocol === 'https:';
-  const proxies  = isHttps
-    ? [_tryAllOriginsGet, _tryAllOriginsRaw, _tryRss2json, _tryCorsProxyIo]
-    : [_tryLocalProxy, _tryAllOriginsGet, _tryAllOriginsRaw, _tryRss2json];
+  // 2. Try proxies in sequence
+  return await _fetchWithFallback(feedDef, cacheKey);
+}
 
-  for (const proxy of proxies) {
+// Track ongoing bg refreshes to avoid duplicate fetches
+const _bgRefreshPending = new Set();
+
+function _scheduleBgRefresh(feedDef, cacheKey) {
+  if(_bgRefreshPending.has(feedDef.name)) return;
+  const cached = localStorage.getItem(cacheKey);
+  if(cached) {
+    const {ts} = JSON.parse(cached);
+    const age = Date.now() - ts;
+    if(age < RSS_CACHE_TTL * 0.5) return; // still fresh enough, skip
+  }
+  _bgRefreshPending.add(feedDef.name);
+  setTimeout(async () => {
+    try {
+      await _fetchWithFallback(feedDef, cacheKey);
+    } finally {
+      _bgRefreshPending.delete(feedDef.name);
+    }
+  }, 100);
+}
+
+async function _fetchWithFallback(feedDef, cacheKey) {
+  const proxies = [_tryRss2json, _tryAllOrigins, _tryCorsProxy];
+  for(const proxy of proxies) {
     try {
       const items = await proxy(feedDef);
-      if (items?.length) {
-        try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), items })); } catch(e) {}
+      if(items?.length) {
+        // Cache in localStorage
+        try { localStorage.setItem(cacheKey, JSON.stringify({ts: Date.now(), items})); } catch(e){}
         return items;
       }
-    } catch(e) { /* silent, try next */ }
+    } catch(e) { /* try next proxy */ }
   }
   return [];
 }
-
-// parseFeed — public wrapper: builds cacheKey and calls _fetchWithFallback
-async function parseFeed(feedDef) {
-  const cacheKey = 'rss_' + feedDef.name;
-  return _fetchWithFallback(feedDef, cacheKey);
-}
-
 
 let newsLoaded = false;
 
@@ -3595,9 +3370,9 @@ function addNewsSection(nl, title, color='var(--dim)'){
 
 // ── SharePoint AI analysis via proxy ──────────────────────────────
 async function fetchSharePointAIReports(){
-  if(!MEDECO_OAUTH2.CLIENT_ID) return [];
+  if(!MEDECO_BASE) return [];  // proxy not running
   try {
-    const url = `${MEDECO_API_URL}/sharepoint/press-reports`;
+    const url = `${MEDECO_BASE}/sharepoint/press-reports`;
     const r = await fetch(url, {signal: AbortSignal.timeout(15000)});
     if(!r.ok) throw new Error('HTTP '+r.status);
     const j = await r.json();
@@ -3812,7 +3587,7 @@ function _renderNewsContent(nl, allRssItems, aiReports) {
       nl.appendChild(card);
     });
 
-  } else if(MEDECO_OAUTH2.CLIENT_ID) {
+  } else if(MEDECO_BASE) {
     // Proxy configured but SharePoint not yet loaded or error
     addNewsSection(nl, '📂 SHAREPOINT PRESS REPORTS', '#4fc3f7');
     const d = document.createElement('div');
@@ -3983,9 +3758,6 @@ function mobTab(view) {
   document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
   const activeBtn = document.getElementById('mobt-' + view);
   if(activeBtn) activeBtn.classList.add('active');
-
-  // Always close side panel when switching tabs
-  mobCloseSidePanel();
 
   // Close side panel drawer when switching views
   if(view !== 'map') mobCloseSidePanel();
@@ -4367,7 +4139,6 @@ function setProductMode(mode) {
   }
 
   showView('map');
-  loadProductKPIs(mode); // load live product KPIs for this mode
 
   // Show Medeco pills per mode
   const medecoSep = document.getElementById('medeco-pills-sep');
@@ -4554,515 +4325,6 @@ setInterval(loadNewsTicker, 600000);
    Loads on app start and refreshes every hour
    Displays current stocks / production / imports as mini badges
 ─────────────────────────────────────────────────────────────── */
-
-
-// ── GIE AGSI+ Chart Builder ──────────────────────────────────────
-const GIE_KEY = 'a69f07b1325d1877ff0edfc060ba32f2';
-
-async function fetchGIEStorage(country='EU', days=90) {
-  const url = `https://agsi.gie.eu/api/data/${country}?size=${days}`;
-  const r   = await fetch(url, {
-    signal: AbortSignal.timeout(8000),
-    headers: { 'x-key': GIE_KEY },
-  });
-  if (!r.ok) throw new Error(`GIE HTTP ${r.status}`);
-  return await r.json();
-}
-
-async function buildGIEChart(gieKey) {
-  const av  = document.getElementById('analytics-view');
-  av.innerHTML = `<div style="height:100%;display:flex;align-items:center;justify-content:center;
-    flex-direction:column;gap:10px;color:var(--dim)">
-    <div style="font-size:11px;letter-spacing:.15em;color:#22d3ee;animation:blink 1s infinite">
-      ⚡ FETCHING GIE AGSI+ DATA…
-    </div>
-    <div style="font-size:9px">agsi.gie.eu</div>
-  </div>`;
-
-  try {
-    if (gieKey === 'eu-storage') {
-      // EU aggregate — last 365 days as time series
-      const j    = await fetchGIEStorage('EU', 365);
-      const data = (j?.data || []).reverse(); // oldest first
-
-      if (!data.length) throw new Error('No GIE data');
-
-      const labels = data.map(d => d.gasDayStart);
-      const pct    = data.map(d => d.full ? parseFloat(d.full) : null);
-      const latest = data[data.length - 1];
-      const pctVal = latest?.full ? (+latest.full).toFixed(1) : '—';
-      const volVal = latest?.gasInStorage ? (+latest.gasInStorage/1000).toFixed(0) + ' TWh' : '';
-      const date   = latest?.gasDayStart || '';
-
-      av.innerHTML = '<canvas id="main-chart"></canvas>';
-      const ctx = document.getElementById('main-chart');
-      const pctNum = parseFloat(pctVal);
-      const lineCol = pctNum > 70 ? '#39d98a' : pctNum > 40 ? '#f0a500' : '#e05252';
-
-      currentMainChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: 'EU Storage % full',
-            data: pct,
-            borderColor: lineCol,
-            backgroundColor: lineCol + '18',
-            fill: true,
-            tension: 0.3,
-            pointRadius: 0,
-            borderWidth: 2,
-          }, {
-            label: 'Low (20%)',
-            data: data.map(() => 20),
-            borderColor: '#e0525240',
-            borderDash: [6, 4],
-            pointRadius: 0,
-            fill: false,
-            borderWidth: 1,
-          }, {
-            label: 'High (90%)',
-            data: data.map(() => 90),
-            borderColor: '#39d98a40',
-            borderDash: [6, 4],
-            pointRadius: 0,
-            fill: false,
-            borderWidth: 1,
-          }],
-        },
-        options: {
-          ...chartOpts(),
-          plugins: {
-            ...chartOpts().plugins,
-            title: {
-              display: true,
-              text: `EU GAS STORAGE — ${pctVal}% full · ${volVal} · ${date}`,
-              color: lineCol,
-              font: { size: 11, family: "'IBM Plex Mono', monospace" },
-            },
-          },
-          scales: {
-            ...chartOpts().scales,
-            y: { ...chartOpts().scales?.y, min: 0, max: 100,
-              ticks: { ...chartOpts().scales?.y?.ticks, callback: v => v + '%' }
-            },
-          },
-        },
-      });
-
-    } else if (gieKey === 'eu-countries') {
-      // Latest storage by country — bar chart
-      const countries = ['DE','FR','IT','NL','AT','BE','CZ','HU','PL','ES','PT','RO','SK','SE','DK','BG'];
-      const results   = await Promise.allSettled(
-        countries.map(c => fetchGIEStorage(c, 1))
-      );
-      const bars = [];
-      results.forEach((r, i) => {
-        if (r.status === 'fulfilled') {
-          const d   = r.value?.data?.[0];
-          const pct = d?.full ? parseFloat(d.full) : null;
-          if (pct !== null) bars.push({ country: countries[i], pct });
-        }
-      });
-      bars.sort((a, b) => b.pct - a.pct);
-
-      av.innerHTML = '<canvas id="main-chart"></canvas>';
-      const ctx = document.getElementById('main-chart');
-      currentMainChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: bars.map(b => b.country),
-          datasets: [{
-            label: 'Storage % full',
-            data: bars.map(b => b.pct),
-            backgroundColor: bars.map(b =>
-              b.pct > 70 ? '#39d98a80' : b.pct > 40 ? '#f0a50080' : '#e0525280'
-            ),
-            borderColor: bars.map(b =>
-              b.pct > 70 ? '#39d98a' : b.pct > 40 ? '#f0a500' : '#e05252'
-            ),
-            borderWidth: 1,
-          }],
-        },
-        options: {
-          ...chartOpts(),
-          plugins: {
-            ...chartOpts().plugins,
-            title: {
-              display: true,
-              text: 'EU GAS STORAGE BY COUNTRY (% full) · GIE AGSI+',
-              color: '#22d3ee',
-              font: { size: 11, family: "'IBM Plex Mono', monospace" },
-            },
-          },
-          scales: {
-            ...chartOpts().scales,
-            y: { ...chartOpts().scales?.y, min: 0, max: 100,
-              ticks: { ...chartOpts().scales?.y?.ticks, callback: v => v + '%' }
-            },
-          },
-        },
-      });
-    }
-
-  } catch(e) {
-    console.error('[GIE]', e.message);
-    av.innerHTML = `<div style="height:100%;display:flex;align-items:center;justify-content:center;
-      flex-direction:column;gap:8px;padding:20px">
-      <div style="font-size:20px">⚠️</div>
-      <div style="font-size:11px;color:var(--accent2);letter-spacing:.1em">GIE AGSI+ UNAVAILABLE</div>
-      <div style="font-size:9px;color:var(--dim)">${e.message}</div>
-    </div>`;
-  }
-}
-
-// ── loadBalanceKPIs — populates the 3 live columns on the Global Balance panel ──
-// Sources: EIA API (STEO + production + imports) — free, CORS-enabled
-async function loadBalanceKPIs(mode) {
-  mode = mode || currentMode || 'crude';
-  const EIA = (path, params) => fetchEIA(path, params);
-
-  // Update panel titles based on mode
-  const titles = {
-    crude:    ['OPEC+ OUTPUT (Mb/d)',      'TOP IMPORTERS (Mb/d)', 'GLOBAL BALANCE'],
-    distillat:['DISTILLATE OUTPUT (Mb/d)', 'TOP IMPORTERS (Mb/d)', 'US STOCKS'],
-    fuel:     ['FUEL OIL SUPPLY',          'BUNKER PORTS',         'US STOCKS'],
-    gasoline: ['REFINERY OUTPUT',          'TOP IMPORTERS',        'US STOCKS'],
-    lng:      ['LNG SUPPLY',               'TOP IMPORTERS (LNG)',  'EU STORAGE'],
-    shipping: ['SHIPPING ROUTES',          'KEY STRAITS',          'FREIGHT'],
-  };
-  const [t1, t2, t3] = titles[mode] || titles.crude;
-  const el1 = document.querySelector('#bp-opec-output .bp-col-title');
-  const el2 = document.querySelector('#bp-top-importers .bp-col-title');
-  const el3 = document.querySelector('#bp-global-balance .bp-col-title');
-  if (el1) el1.textContent = t1;
-  if (el2) el2.textContent = t2;
-  if (el3) el3.textContent = t3;
-
-  // Fetch in parallel: OPEC+ monthly production per country, imports by country, STEO balance
-  try {
-    // ── 1. OPEC+ OUTPUT — EIA monthly crude production by country ──
-    const opecCountries = {
-      'Saudi Arabia': 'SAUPROD',
-      'Russia':       'RUSPROD',
-      'Iraq':         'IRQPROD',
-      'UAE':          'AREPROD',
-      'Iran':         'IRNPROD',
-      'Kuwait':       'KWEPROD',
-    };
-    // Use STEO international production (series like SAUPROD)
-    // Actually EIA STEO monthly short-term: api/v2/steo
-    const [steo, imports] = await Promise.all([
-      fetchEIA('/steo/data/', {
-        frequency: 'monthly',
-        data: 'value',
-        facets: 'seriesId',
-        sort: 'period',
-        direction: 'desc',
-        length: 3,
-      }).catch(() => null),
-      fetchEIACrudeImports().catch(() => null),
-    ]);
-
-    const now    = new Date();
-    const period = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-
-    // ── OPEC+ OUTPUT panel — use last known values + EIA STEO if available ──
-    const opecBody = document.getElementById('bp-opec-output-body');
-    if (opecBody) {
-      // Best available: hardcoded latest IEA OMR (Mar 2025) + EIA STEO
-      // Updated values: IEA OMR Feb 2026 estimates
-      const opecRows = [
-        { key: 'Saudi Arabia', val: 8.9,  up: false },
-        { key: 'Russia',       val: 9.0,  up: false },
-        { key: 'Iraq',         val: 4.3,  up: true  },
-        { key: 'UAE',          val: 3.6,  up: true  },
-        { key: 'Iran',         val: 3.4,  up: false },
-        { key: 'Kuwait',       val: 2.5,  up: false },
-        { key: 'OPEC+ cut',   val: -2.2, up: false },
-      ];
-      opecBody.innerHTML = opecRows.map(r => `
-        <div class="bp-row">
-          <span class="bp-key">${r.key}</span>
-          <span class="bp-val" style="color:${r.key==='OPEC+ cut'?'var(--accent2)':r.up?'var(--green)':'var(--accent)'}">
-            ${r.val >= 0 ? r.val.toFixed(1) : r.val.toFixed(1)}
-          </span>
-        </div>`).join('') +
-        `<div class="src">Source: IEA OMR · Feb 2026</div>`;
-    }
-
-    // ── TOP IMPORTERS — from EIA monthly crude imports ──
-    const impBody = document.getElementById('bp-importers-body');
-    if (impBody && imports && imports.length) {
-      // EIA imports data is US-centric — show US + use IEA for others
-      const usLatest = imports[imports.length - 1];
-      const usDate   = usLatest?.date || period;
-      const importers = [
-        { key: 'China',         val: 11.2 },
-        { key: 'United States', val: usLatest?.value?.toFixed(1) || '8.3' },
-        { key: 'India',         val: 5.3  },
-        { key: 'Japan',         val: 2.7  },
-        { key: 'South Korea',   val: 2.7  },
-        { key: 'Germany',       val: 1.8  },
-        { key: 'Netherlands',   val: 1.2  },
-      ];
-      impBody.innerHTML = importers.map(r => `
-        <div class="bp-row">
-          <span class="bp-key">${r.key}</span>
-          <span class="bp-val">${r.val}</span>
-        </div>`).join('') +
-        `<div class="src">US: EIA ${usDate} · Others: IEA</div>`;
-    } else if (impBody) {
-      // Fallback static IEA data
-      impBody.innerHTML = [
-        ['China', 11.2], ['United States', 8.3], ['India', 5.3],
-        ['Japan', 2.7], ['South Korea', 2.7], ['Germany', 1.8], ['Netherlands', 1.2],
-      ].map(([k,v]) => `<div class="bp-row"><span class="bp-key">${k}</span><span class="bp-val">${v}</span></div>`).join('') +
-        `<div class="src">Source: IEA OMR · Feb 2026</div>`;
-    }
-
-    // ── GLOBAL BALANCE — EIA live stocks + IEA OMR estimates ──────
-    const balBody = document.getElementById('bp-balance-body');
-    if (balBody) {
-      // Use EIA live crude stocks (fast, already cached) + IEA OMR for supply/demand
-      const stocks = await fetchEIACrudeStocks().catch(()=>null);
-      const stocksLatest = stocks ? stocks[stocks.length-1] : null;
-      const stockStr  = stocksLatest ? stocksLatest.value.toFixed(0)+' Mbbl' : '—';
-      const stockDate = stocksLatest?.date || '';
-      // IEA OMR Feb 2026 estimates (updated manually each month)
-      balBody.innerHTML = `
-        <div class="bp-row"><span class="bp-key">Supply</span><span class="bp-val up">104.3 Mb/d</span></div>
-        <div class="bp-row"><span class="bp-key">Demand</span><span class="bp-val dn">103.8 Mb/d</span></div>
-        <div class="bp-row"><span class="bp-key">Surplus</span><span class="bp-val" style="color:var(--green)">+0.5 Mb/d</span></div>
-        <div class="bp-row"><span class="bp-key">US Stocks</span><span class="bp-val">⚡ ${stockStr}</span></div>
-        <div class="bp-row"><span class="bp-key">Date</span><span class="bp-val" style="font-size:9px">${stockDate}</span></div>
-        <div class="src">Supply/Demand: IEA OMR Feb 2026 · Stocks: ⚡ EIA live</div>`;
-    }
-
-  } catch(e) {
-    console.warn('[BALANCE] loadBalanceKPIs error:', e.message);
-  }
-}
-
-
-// ── EIA Product Stocks Fetchers ───────────────────────────────────
-async function fetchEIADistillateStocks() {
-  // WDISTUS1 = US Distillate Fuel Oil Stocks (weekly, Mbbl)
-  const j = await fetchEIA('/petroleum/stoc/wstk/data/', {
-    frequency:'weekly', data:'value', facets:'WDISTUS1',
-    sort:'period', direction:'desc', length:52, offset:0,
-  });
-  if (!j) return null;
-  const rows = j.response?.data || [];
-  return rows.map(r => ({date:r.period, value:+(parseFloat(r.value)/1000).toFixed(1)}))
-             .filter(r=>!isNaN(r.value)).reverse();
-}
-
-async function fetchEIAFuelOilStocks() {
-  // WFUELOS1 = US Residual Fuel Oil Stocks (weekly, Mbbl)
-  const j = await fetchEIA('/petroleum/stoc/wstk/data/', {
-    frequency:'weekly', data:'value', facets:'WFUELOS1',
-    sort:'period', direction:'desc', length:52, offset:0,
-  });
-  if (!j) return null;
-  const rows = j.response?.data || [];
-  return rows.map(r => ({date:r.period, value:+(parseFloat(r.value)/1000).toFixed(1)}))
-             .filter(r=>!isNaN(r.value)).reverse();
-}
-
-async function fetchEIAGasolineStocks() {
-  // WGTSTUS1 = US Finished Motor Gasoline Stocks (weekly, Mbbl)
-  const j = await fetchEIA('/petroleum/stoc/wstk/data/', {
-    frequency:'weekly', data:'value', facets:'WGTSTUS1',
-    sort:'period', direction:'desc', length:52, offset:0,
-  });
-  if (!j) return null;
-  const rows = j.response?.data || [];
-  return rows.map(r => ({date:r.period, value:+(parseFloat(r.value)/1000).toFixed(1)}))
-             .filter(r=>!isNaN(r.value)).reverse();
-}
-
-async function fetchEIANGLiquids() {
-  // WPRSTUS1 = US Propane/Propylene Stocks (weekly, Mbbl) — NGL proxy
-  const j = await fetchEIA('/petroleum/stoc/wstk/data/', {
-    frequency:'weekly', data:'value', facets:'WPRSTUS1',
-    sort:'period', direction:'desc', length:52, offset:0,
-  });
-  if (!j) return null;
-  const rows = j.response?.data || [];
-  return rows.map(r => ({date:r.period, value:+(parseFloat(r.value)/1000).toFixed(1)}))
-             .filter(r=>!isNaN(r.value)).reverse();
-}
-
-async function fetchEIAKeroJetStocks() {
-  // WKJSTUS1 = US Kerosene-Type Jet Fuel Stocks (weekly, Mbbl)
-  const j = await fetchEIA('/petroleum/stoc/wstk/data/', {
-    frequency:'weekly', data:'value', facets:'WKJSTUS1',
-    sort:'period', direction:'desc', length:52, offset:0,
-  });
-  if (!j) return null;
-  const rows = j.response?.data || [];
-  return rows.map(r => ({date:r.period, value:+(parseFloat(r.value)/1000).toFixed(1)}))
-             .filter(r=>!isNaN(r.value)).reverse();
-}
-
-// ── Product KPI loader — called by setProductMode ─────────────────
-async function loadProductKPIs(mode) {
-  const strip = document.getElementById('eia-kpi-strip');
-  if (!strip) return;
-
-  const kpiStyle = (bg, border) =>
-    `flex:1;min-width:80px;padding:5px 7px;background:${bg};border:1px solid ${border}`;
-
-  const fmtRow = (rows, unit, dec=1) => {
-    if (!rows?.length) return '<span style="color:var(--dim)">—</span>';
-    const v   = rows[rows.length-1].value;
-    const p   = rows[rows.length-2]?.value;
-    const chg = p != null ? v - p : 0;
-    const dir = chg >= 0 ? '▲' : '▼';
-    const col = chg >= 0 ? 'var(--green)' : 'var(--accent2)';
-    const dt  = rows[rows.length-1].date;
-    return `<span style="color:var(--text)">${v.toFixed(dec)}</span>`
-         + `<span style="color:${col};font-size:8px;margin-left:2px">${dir}${Math.abs(chg).toFixed(dec)}</span>`
-         + `<span style="color:var(--dim);font-size:8px"> ${unit}</span>`
-         + `<div style="font-size:7px;color:var(--dim);margin-top:1px">${dt}</div>`;
-  };
-
-  strip.innerHTML = '<span style="font-size:9px;color:var(--dim)">⚡ EIA…</span>';
-
-  try {
-    if (mode === 'crude') {
-      // Existing crude KPIs
-      loadEIAKPIs();
-      return;
-    }
-
-    if (mode === 'distillat') {
-      const [dist, jet] = await Promise.all([
-        fetchEIADistillateStocks(),
-        fetchEIAKeroJetStocks(),
-      ]);
-      strip.innerHTML = `
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-          <div style="${kpiStyle('rgba(56,189,248,.06)','rgba(56,189,248,.2)')}">
-            <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">US DISTILLATE STOCKS</div>
-            <div style="font-size:11px">${fmtRow(dist,'Mbbl')}</div>
-            <div style="font-size:8px;color:var(--dim);margin-top:1px">EIA Weekly</div>
-          </div>
-          <div style="${kpiStyle('rgba(56,189,248,.06)','rgba(56,189,248,.15)')}">
-            <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">US JET FUEL STOCKS</div>
-            <div style="font-size:11px">${fmtRow(jet,'Mbbl')}</div>
-            <div style="font-size:8px;color:var(--dim);margin-top:1px">EIA Weekly</div>
-          </div>
-          <div style="${kpiStyle('rgba(56,189,248,.04)','rgba(56,189,248,.1)')}">
-            <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">EU GASOIL STOCKS</div>
-            <div style="font-size:11px;color:var(--dim)">→ Euroilstock</div>
-            <div style="font-size:8px;color:var(--dim);margin-top:1px">Monthly · delayed</div>
-          </div>
-        </div>
-        <div style="font-size:8px;color:var(--dim);margin-top:5px;text-align:right">⚡ api.eia.gov · WPSR · ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>`;
-      return;
-    }
-
-    if (mode === 'fuel') {
-      const fuel = await fetchEIAFuelOilStocks();
-      strip.innerHTML = `
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-          <div style="${kpiStyle('rgba(251,146,60,.06)','rgba(251,146,60,.2)')}">
-            <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">US FUEL OIL STOCKS</div>
-            <div style="font-size:11px">${fmtRow(fuel,'Mbbl')}</div>
-            <div style="font-size:8px;color:var(--dim);margin-top:1px">EIA Weekly</div>
-          </div>
-          <div style="${kpiStyle('rgba(251,146,60,.04)','rgba(251,146,60,.1)')}">
-            <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">BUNKER VLSFO RDAM</div>
-            <div style="font-size:11px;color:var(--dim)">→ Ship&amp;Bunker</div>
-            <div style="font-size:8px;color:var(--dim);margin-top:1px">Via RSS · live</div>
-          </div>
-          <div style="${kpiStyle('rgba(251,146,60,.04)','rgba(251,146,60,.1)')}">
-            <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">BUNKER HSFO SING</div>
-            <div style="font-size:11px;color:var(--dim)">→ Ship&amp;Bunker</div>
-            <div style="font-size:8px;color:var(--dim);margin-top:1px">Via RSS · live</div>
-          </div>
-        </div>
-        <div style="font-size:8px;color:var(--dim);margin-top:5px;text-align:right">⚡ api.eia.gov · WPSR · ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>`;
-      return;
-    }
-
-    if (mode === 'gasoline') {
-      const [gas, ngl] = await Promise.all([
-        fetchEIAGasolineStocks(),
-        fetchEIANGLiquids(),
-      ]);
-      strip.innerHTML = `
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-          <div style="${kpiStyle('rgba(74,222,128,.06)','rgba(74,222,128,.2)')}">
-            <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">US GASOLINE STOCKS</div>
-            <div style="font-size:11px">${fmtRow(gas,'Mbbl')}</div>
-            <div style="font-size:8px;color:var(--dim);margin-top:1px">EIA Weekly</div>
-          </div>
-          <div style="${kpiStyle('rgba(74,222,128,.04)','rgba(74,222,128,.15)')}">
-            <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">US PROPANE/NGL</div>
-            <div style="font-size:11px">${fmtRow(ngl,'Mbbl')}</div>
-            <div style="font-size:8px;color:var(--dim);margin-top:1px">EIA Weekly</div>
-          </div>
-        </div>
-        <div style="font-size:8px;color:var(--dim);margin-top:5px;text-align:right">⚡ api.eia.gov · WPSR · ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>`;
-      return;
-    }
-
-    if (mode === 'lng') {
-      // GIE AGSI+ EU gas storage
-      try {
-        const gieUrl  = 'https://agsi.gie.eu/api/data/EU?size=1';
-        const r = await fetch(gieUrl, {
-          signal: AbortSignal.timeout(6000),
-          headers: { 'x-key': GIE_KEY },
-        });
-        if (r.ok) {
-          const j    = await r.json();
-          const d    = j?.data?.[0];
-          const pct  = d?.full      ? (+d.full).toFixed(1)      : '—';
-          const inj  = d?.injection ? (+d.injection).toFixed(2)  : '—';
-          const wdr  = d?.withdrawal? (+d.withdrawal).toFixed(2) : '—';
-          const vol  = d?.gasInStorage ? (+d.gasInStorage/1000).toFixed(0) : '—';
-          const dt   = d?.gasDayStart || '';
-          const pctNum = parseFloat(pct);
-          const pctCol = pctNum > 70 ? 'var(--green)' : pctNum > 40 ? 'var(--accent)' : 'var(--accent2)';
-          strip.innerHTML = `
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-              <div style="${kpiStyle('rgba(34,211,238,.06)','rgba(34,211,238,.2)')}">
-                <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">EU GAS STORAGE</div>
-                <div style="font-size:13px;font-weight:600"><span style="color:${pctCol}">${pct}%</span><span style="color:var(--dim);font-size:9px"> full</span></div>
-                <div style="font-size:7px;color:var(--dim);margin-top:1px">${vol} TWh · ${dt}</div>
-              </div>
-              <div style="${kpiStyle('rgba(34,211,238,.04)','rgba(34,211,238,.15)')}">
-                <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">INJECTION</div>
-                <div style="font-size:11px"><span style="color:var(--green)">${inj}</span><span style="color:var(--dim);font-size:8px"> GWh/d</span></div>
-                <div style="font-size:7px;color:var(--dim);margin-top:1px">net flow in</div>
-              </div>
-              <div style="${kpiStyle('rgba(34,211,238,.04)','rgba(34,211,238,.15)')}">
-                <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;margin-bottom:2px">WITHDRAWAL</div>
-                <div style="font-size:11px"><span style="color:var(--accent2)">${wdr}</span><span style="color:var(--dim);font-size:8px"> GWh/d</span></div>
-                <div style="font-size:7px;color:var(--dim);margin-top:1px">net flow out</div>
-              </div>
-            </div>
-            <div style="font-size:8px;color:var(--dim);margin-top:5px;text-align:right">⚡ GIE AGSI+ · ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>`;
-        }
-      } catch(e) {
-        strip.innerHTML = '<span style="font-size:9px;color:var(--dim)">GIE unavailable</span>';
-      }
-      return;
-    }
-
-    // Default: clear strip for shipping/other modes
-    strip.innerHTML = '';
-
-  } catch(e) {
-    console.warn('[PRODUCT KPI]', mode, e.message);
-    strip.innerHTML = '<span style="font-size:9px;color:var(--dim)">Data unavailable</span>';
-  }
-}
-
 async function loadEIAKPIs() {
   const container = document.getElementById('eia-kpi-strip');
   if (!container) return;
@@ -5119,10 +4381,9 @@ async function loadEIAKPIs() {
   }
 }
 
-// Load EIA KPIs at startup (crude only), refresh every hour
+// Load EIA KPIs at startup, refresh every hour
 loadEIAKPIs();
 setInterval(loadEIAKPIs, 3600000);
-// Note: loadBalanceKPIs only loads when GLOBAL BAL panel is opened (not at startup)
 
 
 // S&P Global Platts Periodic Table of Oil — Jan 2025 — 150 grades
@@ -6182,44 +5443,42 @@ document.querySelector('#header .nav-pills .pill').classList.add('active');
 async function checkMedecoStatus(){
   const dot   = document.getElementById('medeco-dot');
   const label = document.getElementById('medeco-label');
-  // Try proxy first
+  if(!MEDECO_BASE){
+    dot.style.background = 'var(--dim)';
+    label.textContent = 'MEDECO: off';
+    label.title = 'Proxy non configuré (MEDECO_BASE = null)';
+    return;
+  }
+  dot.style.background = 'var(--amber, #f0a500)';
+  label.textContent = 'MEDECO…';
   try {
-    const r = await fetch('http://localhost:8765/medeco/health', { signal: AbortSignal.timeout(3000) });
-    if (r.ok) {
+    const r = await fetch(`${MEDECO_BASE}/health`, {signal: AbortSignal.timeout(5000)});
+    const j = await r.json();
+    if(j.medeco === 'reachable'){
       dot.style.background = 'var(--green)';
-      label.textContent    = 'MEDECO: ✅ proxy';
-      label.title          = 'localhost:8765';
-      return;
-    }
-  } catch(e) { /* proxy not running */ }
-
-  // Try OAuth2
-  try {
-    const token = await getMedecoToken();
-    const resp  = await fetch(`${MEDECO_API_URL}/health`, {
-      headers: { 'Authorization': `Bearer ${token}` },
-      signal:  AbortSignal.timeout(5000),
-    });
-    const ok = resp.ok || resp.status === 401; // 401 = reachable but auth issue
-    if (resp.ok) {
-      dot.style.background   = 'var(--green)';
-      label.textContent      = 'MEDECO: ✅ connecté';
-      label.title            = `OAuth2 • ${MEDECO_API_URL}`;
+      dot.style.animation = 'blink 2s infinite';
+      label.textContent = 'MEDECO: live';
+      label.title = 'Proxy connecté et Medeco accessible';
+      console.log('[MEDECO] ✅ Connecté —', MEDECO_BASE);
+      // Highlight medeco pills
+      document.querySelectorAll('[id^="pill-"]').forEach(p=>{
+        p.style.borderColor = 'var(--green)';
+        p.style.color = 'var(--green)';
+      });
     } else {
-      dot.style.background   = 'orange';
-      label.textContent      = `MEDECO: HTTP ${resp.status}`;
-      label.title            = `${MEDECO_API_URL}`;
+      throw new Error(j.detail || 'Medeco unreachable');
     }
-  } catch(e) {
-    dot.style.background     = 'var(--accent2)';
-    label.textContent        = 'MEDECO: ❌ ' + e.message.slice(0,30);
-    label.title              = e.message;
-    console.warn('[MEDECO]', e.message);
+  } catch(e){
+    dot.style.background = 'var(--accent2)';
+    dot.style.animation = '';
+    label.textContent = 'MEDECO: err';
+    label.title = 'Proxy lancé mais Medeco inaccessible: '+e.message;
+    console.warn('[MEDECO] ⚠️ Erreur:', e.message);
   }
 }
 
 // Auto-check Medeco status at startup and every 30s
-checkMedecoStatus(); // OAuth2 — auto-connects
+checkMedecoStatus();
 setInterval(checkMedecoStatus, 30000);
 
 // Console guide for the user
@@ -6227,8 +5486,9 @@ console.log('%c[CRUDE TERMINAL]', 'color:#f0a500;font-weight:bold;font-size:13px
 console.log('%cPour activer les données Medeco :', 'color:#58677a');
 console.log('%c  1. Lancer : python medeco_proxy.py', 'color:#4fc3f7');
 console.log('%c  2. Changer dans le HTML : const MEDECO_BASE = \'http://localhost:8765/medeco\'', 'color:#4fc3f7');
-if(MEDECO_OAUTH2.CLIENT_ID) {
-  console.log('%c[MEDECO] OAuth2 configuré — ' + MEDECO_API_URL, 'color:#39d98a;font-weight:bold');
+if(MEDECO_BASE) {
+  console.log('%c[MEDECO] Proxy configuré sur ' + MEDECO_BASE, 'color:#39d98a;font-weight:bold');
+  console.log('%c[MEDECO] Test santé → ' + MEDECO_BASE + '/health', 'color:#39d98a');
 } else {
   console.log('%c[MEDECO] Non configuré (MEDECO_BASE = null) — les onglets 📡 afficheront les instructions', 'color:#58677a');
 }
@@ -6389,10 +5649,6 @@ if(window.innerWidth <= 768) {
   <button class="mob-tab" id="mobt-refinery" onclick="mobTab('refinery')">
     <span class="mob-tab-icon">🏭</span>
     <span>RAFFINAGE</span>
-  </button>
-  <button class="mob-tab" id="mobt-info" onclick="mobOpenSidePanel()">
-    <span class="mob-tab-icon">ℹ️</span>
-    <span>INFO</span>
   </button>
 </div>
 
