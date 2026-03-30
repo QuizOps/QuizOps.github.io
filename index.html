@@ -408,83 +408,48 @@ body {
   .divider,
   #mode-bar { display: none !important; }
 
-  /* Force bottom-panel to truly disappear on mobile */
-  #bottom-panel {
-    display: none !important;
-    height: 0 !important;
-  }
+  /* Force bottom-panel to truly disappear */
+  #bottom-panel { height: 0 !important; }
 
-  /* ── Body: allow scroll on mobile ── */
-  body {
-    height: 100dvh;
-    overflow: hidden;
-    font-size: 13px;
-  }
+  /* ── Body ── */
+  body { height: 100dvh; overflow: hidden; font-size: 13px; }
 
-  /* ── Headline ticker — slimmer ── */
-  #headline-bar {
-    height: 22px;
-    font-size: 10px;
-  }
+  /* ── Headline ticker ── */
+  #headline-bar { height: 22px; font-size: 10px; }
 
-  /* ── Header: compact, logo + pills only ── */
+  /* ── Header ── */
   #header {
-    padding: 0 10px;
-    height: 44px;
-    gap: 6px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    flex-shrink: 0;
+    padding: 0 10px; height: 44px; gap: 6px;
+    overflow-x: auto; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-shrink: 0;
   }
   #header::-webkit-scrollbar { display: none; }
-
   .logo { font-size: 14px; letter-spacing: .12em; flex-shrink: 0; }
 
-  /* Hide all nav pills — replaced by bottom tab bar */
-  .nav-pills { display: none !important; }
-
-  /* Mode bar: show as compact horizontal scroll on mobile */
+  /* Mode bar: compact horizontal scroll on mobile */
   #mode-bar {
     display: flex !important;
-    overflow-x: auto !important;
-    overflow-y: hidden;
-    scrollbar-width: none;
-    height: 36px !important;
-    gap: 2px !important;
-    padding: 0 6px !important;
-    flex-shrink: 0;
+    overflow-x: auto !important; overflow-y: hidden;
+    scrollbar-width: none; height: 34px !important;
+    gap: 2px !important; padding: 0 6px !important; flex-shrink: 0;
   }
   #mode-bar::-webkit-scrollbar { display: none; }
-  #mode-bar .mode-btn {
-    font-size: 9px !important;
-    padding: 4px 8px !important;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
+  #mode-bar .mode-btn { font-size: 9px !important; padding: 3px 8px !important; white-space: nowrap; flex-shrink: 0; }
 
-  /* ── Main: full height, no side panel by default ── */
-  #main {
-    flex: 1;
-    overflow: hidden;
-    padding-bottom: calc(56px + env(safe-area-inset-bottom));
-  }
+  /* Hide nav pills */
+  .nav-pills { display: none !important; }
 
-  /* ── Map: full width ── */
-  #map-wrap {
-    width: 100% !important;
-    flex: 1;
-  }
+  /* ── Main ── */
+  #main { flex: 1; overflow: hidden; padding-bottom: 56px; }
 
-  /* ── Side panel: hidden, becomes bottom drawer ── */
+  /* ── Map ── */
+  #map-wrap { width: 100% !important; flex: 1; }
+
+  /* ── Side panel: bottom drawer ── */
   #side-panel {
     position: fixed !important;
-    bottom: 56px;
-    left: 0;
-    right: 0;
-    width: 100% !important;
-    height: 70dvh;
+    bottom: 56px; left: 0; right: 0;
+    width: 100% !important; height: 70dvh;
     z-index: 3000;
     border-left: none !important;
     border-top: 2px solid var(--accent);
@@ -493,90 +458,50 @@ body {
     transition: transform .3s cubic-bezier(.4,0,.2,1);
     overflow-y: auto;
   }
-  #side-panel.mob-open {
-    transform: translateY(0);
-  }
+  #side-panel.mob-open { transform: translateY(0); }
   #mob-sp-close { display: flex !important; align-items: center; justify-content: center; }
-
-  /* Drag handle on side panel */
   #side-panel::before {
-    content: '';
-    display: block;
-    width: 40px;
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    margin: 10px auto 6px;
-    flex-shrink: 0;
+    content: ''; display: block; width: 40px; height: 4px;
+    background: var(--border); border-radius: 2px; margin: 10px auto 6px; flex-shrink: 0;
   }
 
-  /* ── Overlays: full screen on mobile ── */
+  /* ── Overlays ── */
   .overlay {
-    position: fixed !important;
-    inset: 0 !important;
-    z-index: 4000;
-    padding-bottom: 56px !important;
-    display: flex;
-    flex-direction: column;
+    position: fixed !important; inset: 0 !important;
+    z-index: 4000; padding-bottom: 56px;
+    display: flex; flex-direction: column;
   }
-  #storage-overlay {
-    padding-bottom: 56px !important;
-    z-index: 4000;
-  }
-  .overlay.overlay-hidden {
-    display: none !important;
-  }
+  .overlay.overlay-hidden { display: none !important; }
+  #storage-overlay { padding-bottom: 56px !important; z-index: 4000; }
 
   /* ── Bottom tab bar ── */
   #mob-tab-bar {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: 56px;
-    background: var(--panel);
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: stretch;
-    z-index: 9999;
-    padding-bottom: env(safe-area-inset-bottom);
+    position: fixed; bottom: 0; left: 0; right: 0; height: 56px;
+    background: var(--panel); border-top: 1px solid var(--border);
+    display: flex; align-items: stretch;
+    z-index: 5000; padding-bottom: env(safe-area-inset-bottom);
   }
   .mob-tab {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    font-size: 8px;
-    letter-spacing: .08em;
-    color: var(--dim);
-    background: none;
-    border: none;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: color .15s;
-    padding: 0;
-    font-family: inherit;
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 3px;
+    font-size: 8px; letter-spacing: .08em; color: var(--dim);
+    background: none; border: none; cursor: pointer;
+    -webkit-tap-highlight-color: transparent; transition: color .15s;
+    padding: 0; font-family: inherit;
   }
   .mob-tab .mob-tab-icon { font-size: 18px; line-height: 1; }
   .mob-tab.active { color: var(--accent); }
   .mob-tab.active .mob-tab-icon { filter: drop-shadow(0 0 4px var(--accent)); }
 
-  /* ── KPI grid: 2 columns on mobile ── */
-  .kpi-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 6px !important;
-  }
+  /* ── KPI grid ── */
+  .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 6px !important; }
 
-  /* ── sp-tabs: scrollable on mobile ── */
-  .sp-tabs {
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
+  /* ── sp-tabs ── */
+  .sp-tabs { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .sp-tabs::-webkit-scrollbar { display: none; }
   .sp-tab { flex-shrink: 0; padding: 8px 14px; font-size: 10px; }
 
-  /* ── News overlay body ── */
+  /* ── News overlay ── */
   .ov-body { padding: 10px !important; }
   .news-item { padding: 10px 0 !important; }
 
@@ -585,48 +510,21 @@ body {
   .ov-title { font-size: 12px !important; }
 
   /* ── AI panel ── */
-  #ai-overlay .ov-body {
-    padding: 10px !important;
-  }
-  #ai-input {
-    font-size: 14px !important; /* prevent iOS zoom on input focus */
-  }
+  #ai-overlay .ov-body { padding: 10px !important; }
+  #ai-input { font-size: 14px !important; }
 
-  /* ── Refinery tab ── */
+  /* ── Refinery ── */
   .rf-content { flex-direction: column !important; }
-  .rf-info-panel {
-    width: 100% !important;
-    height: 45dvh;
-    border-left: none !important;
-    border-top: 2px solid #f0a500;
-    flex-shrink: 0;
-  }
-  /* rf-tabs scrollable */
-  #rf-tabs {
-    overflow-x: auto !important;
-    flex-wrap: nowrap !important;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    max-width: calc(100vw - 120px);
-  }
+  .rf-info-panel { width: 100% !important; height: 45dvh; border-left: none !important; border-top: 2px solid #f0a500; flex-shrink: 0; }
+  #rf-tabs { overflow-x: auto !important; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; scrollbar-width: none; max-width: calc(100vw - 120px); }
   #rf-tabs::-webkit-scrollbar { display: none; }
-  /* rf top bar wraps on mobile */
-  #refinery-overlay > div:first-child {
-    height: auto !important;
-    min-height: 44px;
-    padding: 8px 12px !important;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  /* SVG area takes remaining space */
-  #rf-svg-wrap {
-    min-height: 40dvh;
-    overflow: auto !important;
-  }
+  #refinery-overlay > div:first-child { height: auto !important; min-height: 44px; padding: 8px 12px !important; flex-wrap: wrap; gap: 6px; }
+  #rf-svg-wrap { min-height: 40dvh; overflow: auto !important; }
 
-  /* ── Platts periodic table ── */
+  /* ── Platts ── */
   .platts-grid { font-size: 8px !important; }
 }
+
 
 /* ── Mobile chart buttons ── */
 .mob-chart-btn {
