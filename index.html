@@ -39,6 +39,7 @@ body {
   font-family: 'DM Mono', monospace;
   font-size: 12px;
   height: 100vh;
+  height: 100dvh; /* dvh = dynamic viewport height — fixes mobile browser bar */
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -448,7 +449,7 @@ body {
   #main {
     flex: 1;
     overflow: hidden;
-    padding-bottom: 56px; /* room for bottom tab bar */
+    padding-bottom: calc(56px + env(safe-area-inset-bottom));
   }
 
   /* ── Map: full width ── */
@@ -511,13 +512,16 @@ body {
   #mob-tab-bar {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: 56px;
+    height: calc(56px + env(safe-area-inset-bottom));
+    min-height: 56px;
     background: var(--panel);
     border-top: 1px solid var(--border);
-    display: flex;
+    display: flex !important;
     align-items: stretch;
     z-index: 9999;
     padding-bottom: env(safe-area-inset-bottom);
+    visibility: visible !important;
+    opacity: 1 !important;
   }
   .mob-tab {
     flex: 1;
