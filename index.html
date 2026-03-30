@@ -669,6 +669,12 @@ body {
 /* Storage panes — hidden by default, shown by switchStorageTab */
 .storage-pane { display: none; position: absolute; inset: 0; }
 
+/* Mobile country toast — hidden on desktop */
+#mob-country-toast { display: none; }
+@media (max-width: 768px) {
+  #mob-country-toast { display: block; }
+}
+
 /* ── Show bottom tab bar + mob charts only on mobile ── */
 #mob-tab-bar { display: none; }
 #mob-charts-overlay { display: none !important; }
@@ -1045,6 +1051,11 @@ body {
 
   <!-- MAP -->
   <div id="map-wrap">
+  <!-- Mobile country toast -->
+  <div id="mob-country-toast" style="display:none;position:absolute;bottom:70px;left:50%;transform:translateX(-50%);
+    background:rgba(14,20,32,.95);border:1px solid var(--accent);padding:8px 16px;border-radius:20px;
+    font-size:11px;color:var(--text);z-index:1000;white-space:nowrap;
+    transition:opacity .3s;opacity:0;pointer-events:none"></div>
     <div id="leaflet-map"></div>
 
     <!-- Map Legend -->
@@ -1121,7 +1132,7 @@ body {
   <div id="side-panel">
     <div class="sp-head" style="position:relative">
       <!-- Mobile close button -->
-      <button id="mob-sp-close" onclick="mobCloseSidePanel()" style="display:none;position:absolute;top:8px;right:8px;background:none;border:1px solid var(--border);color:var(--dim);font-size:14px;width:28px;height:28px;border-radius:50%;cursor:pointer;font-family:inherit;line-height:1">✕</button>
+      <button id="mob-sp-close" onclick="mobCloseSidePanel()" style="display:none;position:sticky;top:8px;float:right;margin:4px 8px 0 0;z-index:100;background:rgba(14,20,32,.95);border:1px solid var(--accent);color:var(--dim);font-size:14px;width:28px;height:28px;border-radius:50%;cursor:pointer;font-family:inherit;line-height:1">✕</button>
       <div class="sp-head-label">SELECTED COUNTRY</div>
       <div class="sp-head-title" id="sp-country">—</div>
       <div class="sp-head-sub" id="sp-country-sub">Click a producer on the map</div>
@@ -1933,9 +1944,16 @@ function selectCountry(name){
   clearFlows();
   activeCountryName = name;
   const d = COUNTRIES[name];
-  // On mobile: open side panel drawer
+  // On mobile: open side panel only if user taps a button
+  // Don't auto-open — it covers the tab bar
   if(typeof isMobile === 'function' && isMobile()) {
-    setTimeout(() => mobOpenSidePanel(), 50);
+    // Show a small toast notification instead
+    const toast = document.getElementById('mob-country-toast');
+    if(toast) {
+      toast.textContent = name + ' — tap ℹ️ for details';
+      toast.style.opacity = '1';
+      setTimeout(() => toast.style.opacity = '0', 2500);
+    }
   }
 
   // Draw flows
@@ -6371,6 +6389,10 @@ if(window.innerWidth <= 768) {
   <button class="mob-tab" id="mobt-refinery" onclick="mobTab('refinery')">
     <span class="mob-tab-icon">🏭</span>
     <span>RAFFINAGE</span>
+  </button>
+  <button class="mob-tab" id="mobt-info" onclick="mobOpenSidePanel()">
+    <span class="mob-tab-icon">ℹ️</span>
+    <span>INFO</span>
   </button>
 </div>
 
