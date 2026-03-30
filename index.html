@@ -390,8 +390,6 @@ body {
 
   /* ── Hide desktop-only elements ── */
   #ticker-bar,
-  #fed-widget,
-  #yf-widgets,
   .tradingview-widget-container,
   #bottom-panel,
   #medeco-pills-sep,
@@ -408,48 +406,58 @@ body {
   .divider,
   #mode-bar { display: none !important; }
 
-  /* Force bottom-panel to truly disappear */
-  #bottom-panel { height: 0 !important; }
+  /* ── Body: allow scroll on mobile ── */
+  body {
+    height: 100dvh;
+    overflow: hidden;
+    font-size: 13px;
+  }
 
-  /* ── Body ── */
-  body { height: 100dvh; overflow: hidden; font-size: 13px; }
+  /* ── Headline ticker — slimmer ── */
+  #headline-bar {
+    height: 22px;
+    font-size: 10px;
+  }
 
-  /* ── Headline ticker ── */
-  #headline-bar { height: 22px; font-size: 10px; }
-
-  /* ── Header ── */
+  /* ── Header: compact, logo + pills only ── */
   #header {
-    padding: 0 10px; height: 44px; gap: 6px;
-    overflow-x: auto; overflow-y: hidden;
-    -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-shrink: 0;
+    padding: 0 10px;
+    height: 44px;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-shrink: 0;
   }
   #header::-webkit-scrollbar { display: none; }
+
   .logo { font-size: 14px; letter-spacing: .12em; flex-shrink: 0; }
 
-  /* Mode bar: compact horizontal scroll on mobile */
-  #mode-bar {
-    display: flex !important;
-    overflow-x: auto !important; overflow-y: hidden;
-    scrollbar-width: none; height: 34px !important;
-    gap: 2px !important; padding: 0 6px !important; flex-shrink: 0;
-  }
-  #mode-bar::-webkit-scrollbar { display: none; }
-  #mode-bar .mode-btn { font-size: 9px !important; padding: 3px 8px !important; white-space: nowrap; flex-shrink: 0; }
-
-  /* Hide nav pills */
+  /* Hide all nav pills — replaced by bottom tab bar */
   .nav-pills { display: none !important; }
 
-  /* ── Main ── */
-  #main { flex: 1; overflow: hidden; padding-bottom: 56px; }
+  /* ── Main: full height, no side panel by default ── */
+  #main {
+    flex: 1;
+    overflow: hidden;
+    padding-bottom: 56px; /* room for bottom tab bar */
+  }
 
-  /* ── Map ── */
-  #map-wrap { width: 100% !important; flex: 1; }
+  /* ── Map: full width ── */
+  #map-wrap {
+    width: 100% !important;
+    flex: 1;
+  }
 
-  /* ── Side panel: bottom drawer ── */
+  /* ── Side panel: hidden, becomes bottom drawer ── */
   #side-panel {
     position: fixed !important;
-    bottom: 56px; left: 0; right: 0;
-    width: 100% !important; height: 70dvh;
+    bottom: 56px;
+    left: 0;
+    right: 0;
+    width: 100% !important;
+    height: 70dvh;
     z-index: 3000;
     border-left: none !important;
     border-top: 2px solid var(--accent);
@@ -458,50 +466,86 @@ body {
     transition: transform .3s cubic-bezier(.4,0,.2,1);
     overflow-y: auto;
   }
-  #side-panel.mob-open { transform: translateY(0); }
+  #side-panel.mob-open {
+    transform: translateY(0);
+  }
   #mob-sp-close { display: flex !important; align-items: center; justify-content: center; }
+
+  /* Drag handle on side panel */
   #side-panel::before {
-    content: ''; display: block; width: 40px; height: 4px;
-    background: var(--border); border-radius: 2px; margin: 10px auto 6px; flex-shrink: 0;
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 10px auto 6px;
+    flex-shrink: 0;
   }
 
-  /* ── Overlays ── */
+  /* ── Overlays: full screen on mobile ── */
   .overlay {
-    position: fixed !important; inset: 0 !important;
-    z-index: 4000; padding-bottom: 56px;
-    display: flex; flex-direction: column;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 4000;
+    padding-bottom: 56px;
+    display: flex;
+    flex-direction: column;
   }
-  .overlay.overlay-hidden { display: none !important; }
-  #storage-overlay { padding-bottom: 56px !important; z-index: 4000; }
+  .overlay.overlay-hidden {
+    display: none !important;
+  }
 
   /* ── Bottom tab bar ── */
   #mob-tab-bar {
-    position: fixed; bottom: 0; left: 0; right: 0; height: 56px;
-    background: var(--panel); border-top: 1px solid var(--border);
-    display: flex; align-items: stretch;
-    z-index: 5000; padding-bottom: env(safe-area-inset-bottom);
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 56px;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: stretch;
+    z-index: 5000;
+    padding-bottom: env(safe-area-inset-bottom);
   }
   .mob-tab {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 3px;
-    font-size: 8px; letter-spacing: .08em; color: var(--dim);
-    background: none; border: none; cursor: pointer;
-    -webkit-tap-highlight-color: transparent; transition: color .15s;
-    padding: 0; font-family: inherit;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-size: 8px;
+    letter-spacing: .08em;
+    color: var(--dim);
+    background: none;
+    border: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color .15s;
+    padding: 0;
+    font-family: inherit;
   }
   .mob-tab .mob-tab-icon { font-size: 18px; line-height: 1; }
   .mob-tab.active { color: var(--accent); }
   .mob-tab.active .mob-tab-icon { filter: drop-shadow(0 0 4px var(--accent)); }
 
-  /* ── KPI grid ── */
-  .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 6px !important; }
+  /* ── KPI grid: 2 columns on mobile ── */
+  .kpi-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
 
-  /* ── sp-tabs ── */
-  .sp-tabs { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  /* ── sp-tabs: scrollable on mobile ── */
+  .sp-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
   .sp-tabs::-webkit-scrollbar { display: none; }
   .sp-tab { flex-shrink: 0; padding: 8px 14px; font-size: 10px; }
 
-  /* ── News overlay ── */
+  /* ── News overlay body ── */
   .ov-body { padding: 10px !important; }
   .news-item { padding: 10px 0 !important; }
 
@@ -510,41 +554,79 @@ body {
   .ov-title { font-size: 12px !important; }
 
   /* ── AI panel ── */
-  #ai-overlay .ov-body { padding: 10px !important; }
-  #ai-input { font-size: 14px !important; }
+  #ai-overlay .ov-body {
+    padding: 10px !important;
+  }
+  #ai-input {
+    font-size: 14px !important; /* prevent iOS zoom on input focus */
+  }
 
-  /* ── Refinery ── */
+  /* ── Refinery tab ── */
   .rf-content { flex-direction: column !important; }
-  .rf-info-panel { width: 100% !important; height: 45dvh; border-left: none !important; border-top: 2px solid #f0a500; flex-shrink: 0; }
-  #rf-tabs { overflow-x: auto !important; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; scrollbar-width: none; max-width: calc(100vw - 120px); }
+  .rf-info-panel {
+    width: 100% !important;
+    height: 45dvh;
+    border-left: none !important;
+    border-top: 2px solid #f0a500;
+    flex-shrink: 0;
+  }
+  /* rf-tabs scrollable */
+  #rf-tabs {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    max-width: calc(100vw - 120px);
+  }
   #rf-tabs::-webkit-scrollbar { display: none; }
-  #refinery-overlay > div:first-child { height: auto !important; min-height: 44px; padding: 8px 12px !important; flex-wrap: wrap; gap: 6px; }
-  #rf-svg-wrap { min-height: 40dvh; overflow: auto !important; }
+  /* rf top bar wraps on mobile */
+  #refinery-overlay > div:first-child {
+    height: auto !important;
+    min-height: 44px;
+    padding: 8px 12px !important;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  /* SVG area takes remaining space */
+  #rf-svg-wrap {
+    min-height: 40dvh;
+    overflow: auto !important;
+  }
 
-  /* ── Platts ── */
+  /* ── Platts periodic table ── */
   .platts-grid { font-size: 8px !important; }
+
+  /* ── New elements hidden on mobile ── */
+  #fed-widget,
+  #yf-widgets { display: none !important; }
+
+  /* Force bottom-panel height to 0 */
+  #bottom-panel { height: 0 !important; }
+
+  /* Storage overlay */
+  #storage-overlay { padding-bottom: 56px !important; }
+
+  /* Mode bar: horizontal scroll on mobile */
+  #mode-bar {
+    display: flex !important;
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    height: 34px !important;
+    gap: 2px !important;
+    padding: 0 6px !important;
+    flex-shrink: 0;
+  }
+  #mode-bar::-webkit-scrollbar { display: none; }
+  #mode-bar .mode-btn {
+    font-size: 9px !important;
+    padding: 3px 8px !important;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
 }
 
-
-/* ── Mobile chart buttons ── */
-.mob-chart-btn {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 12px 8px;
-  font-size: 11px;
-  font-family: inherit;
-  letter-spacing: .05em;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: border-color .15s, color .15s;
-  text-align: center;
-  -webkit-tap-highlight-color: transparent;
-}
-.mob-chart-btn:active {
-  border-color: var(--accent);
-  color: var(--accent);
-}
 
 /* ── Storage overlay tabs ── */
 .storage-tab {
@@ -1016,7 +1098,7 @@ body {
   <div id="side-panel">
     <div class="sp-head" style="position:relative">
       <!-- Mobile close button -->
-      <button id="mob-sp-close" onclick="mobCloseSidePanel()" style="display:none;position:sticky;top:8px;float:right;margin:4px 8px 0 0;z-index:100;background:rgba(14,20,32,.95);border:1px solid var(--accent);color:var(--dim);font-size:14px;width:28px;height:28px;border-radius:50%;cursor:pointer;font-family:inherit;line-height:1">✕</button>
+      <button id="mob-sp-close" onclick="mobCloseSidePanel()" style="display:none;position:absolute;top:8px;right:8px;background:none;border:1px solid var(--border);color:var(--dim);font-size:14px;width:28px;height:28px;border-radius:50%;cursor:pointer;font-family:inherit;line-height:1">✕</button>
       <div class="sp-head-label">SELECTED COUNTRY</div>
       <div class="sp-head-title" id="sp-country">—</div>
       <div class="sp-head-sub" id="sp-country-sub">Click a producer on the map</div>
@@ -1064,6 +1146,7 @@ body {
       <div style="color:var(--dim);font-size:9px;padding:8px 0">⚡ loading…</div>
     </div>
   </div>
+</div>
 
 <!-- AI Analyst Overlay -->
     <div id="ai-overlay" class="overlay overlay-hidden">
@@ -6486,6 +6569,29 @@ if('serviceWorker' in navigator) {
       .then(r => console.log('[SW] Registered:', r.scope))
       .catch(e => console.warn('[SW] Failed:', e));
   });
+}
+</script>
+
+<script>
+// Debug: check tab bar on mobile
+if(window.innerWidth <= 768) {
+  setTimeout(function() {
+    var tb = document.getElementById('mob-tab-bar');
+    if(tb) {
+      var rect = tb.getBoundingClientRect();
+      var style = window.getComputedStyle(tb);
+      console.log('[DEBUG TAB BAR]',
+        'display:', style.display,
+        'visibility:', style.visibility,
+        'bottom:', rect.bottom,
+        'top:', rect.top,
+        'height:', rect.height,
+        'inViewport:', rect.top < window.innerHeight
+      );
+    } else {
+      console.log('[DEBUG] mob-tab-bar NOT FOUND in DOM');
+    }
+  }, 1000);
 }
 </script>
 </body>
