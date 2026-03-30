@@ -445,6 +445,25 @@ body {
   /* Hide all nav pills — replaced by bottom tab bar */
   .nav-pills { display: none !important; }
 
+  /* Mode bar: show as compact horizontal scroll on mobile */
+  #mode-bar {
+    display: flex !important;
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    height: 36px !important;
+    gap: 2px !important;
+    padding: 0 6px !important;
+    flex-shrink: 0;
+  }
+  #mode-bar::-webkit-scrollbar { display: none; }
+  #mode-bar .mode-btn {
+    font-size: 9px !important;
+    padding: 4px 8px !important;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
   /* ── Main: full height, no side panel by default ── */
   #main {
     flex: 1;
@@ -461,11 +480,12 @@ body {
   /* ── Side panel: hidden, becomes bottom drawer ── */
   #side-panel {
     position: fixed !important;
-    bottom: 56px;
+    bottom: calc(56px + env(safe-area-inset-bottom));
     left: 0;
     right: 0;
     width: 100% !important;
-    height: 70dvh;
+    height: 60dvh;
+    max-height: calc(100dvh - 120px);
     z-index: 3000;
     border-left: none !important;
     border-top: 2px solid var(--accent);
@@ -3945,6 +3965,9 @@ function mobTab(view) {
   document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
   const activeBtn = document.getElementById('mobt-' + view);
   if(activeBtn) activeBtn.classList.add('active');
+
+  // Always close side panel when switching tabs
+  mobCloseSidePanel();
 
   // Close side panel drawer when switching views
   if(view !== 'map') mobCloseSidePanel();
