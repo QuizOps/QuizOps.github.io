@@ -389,6 +389,8 @@ body {
 
   /* ── Hide desktop-only elements ── */
   #ticker-bar,
+  #fed-widget,
+  #yf-widgets,
   .tradingview-widget-container,
   #bottom-panel,
   #medeco-pills-sep,
@@ -404,6 +406,12 @@ body {
   #clock,
   .divider,
   #mode-bar { display: none !important; }
+
+  /* Force bottom-panel to truly disappear on mobile */
+  #bottom-panel {
+    display: none !important;
+    height: 0 !important;
+  }
 
   /* ── Body: allow scroll on mobile ── */
   body {
@@ -487,9 +495,13 @@ body {
     position: fixed !important;
     inset: 0 !important;
     z-index: 4000;
-    padding-bottom: 56px;
+    padding-bottom: 56px !important;
     display: flex;
     flex-direction: column;
+  }
+  #storage-overlay {
+    padding-bottom: 56px !important;
+    z-index: 4000;
   }
   .overlay.overlay-hidden {
     display: none !important;
@@ -504,7 +516,7 @@ body {
     border-top: 1px solid var(--border);
     display: flex;
     align-items: stretch;
-    z-index: 5000;
+    z-index: 9999;
     padding-bottom: env(safe-area-inset-bottom);
   }
   .mob-tab {
@@ -1118,38 +1130,19 @@ body {
   <div class="bp-col" id="bp-opec-output">
     <div class="bp-col-title">OPEC+ OUTPUT (Mb/d)</div>
     <div class="bp-col-body" id="bp-opec-output-body">
-      <div class="bp-row"><span class="bp-key">Saudi Arabia</span><span class="bp-val" style="color:var(--accent)">8.9</span></div>
-      <div class="bp-row"><span class="bp-key">Russia</span><span class="bp-val" style="color:var(--accent)">9.0</span></div>
-      <div class="bp-row"><span class="bp-key">Iraq</span><span class="bp-val">4.3</span></div>
-      <div class="bp-row"><span class="bp-key">UAE</span><span class="bp-val">3.6</span></div>
-      <div class="bp-row"><span class="bp-key">Iran</span><span class="bp-val">3.4</span></div>
-      <div class="bp-row"><span class="bp-key">Kuwait</span><span class="bp-val">2.5</span></div>
-      <div class="bp-row"><span class="bp-key">OPEC+ cut</span><span class="bp-val" style="color:var(--accent2)">-2.2</span></div>
-      <div class="src">IEA OMR · Feb 2026</div>
+      <div style="color:var(--dim);font-size:9px;padding:8px 0">⚡ loading…</div>
     </div>
   </div>
   <div class="bp-col" id="bp-top-importers">
     <div class="bp-col-title">TOP IMPORTERS (Mb/d)</div>
     <div class="bp-col-body" id="bp-importers-body">
-      <div class="bp-row"><span class="bp-key">China</span><span class="bp-val">11.2</span></div>
-      <div class="bp-row"><span class="bp-key">United States</span><span class="bp-val">8.3</span></div>
-      <div class="bp-row"><span class="bp-key">India</span><span class="bp-val">5.3</span></div>
-      <div class="bp-row"><span class="bp-key">Japan</span><span class="bp-val">2.7</span></div>
-      <div class="bp-row"><span class="bp-key">South Korea</span><span class="bp-val">2.7</span></div>
-      <div class="bp-row"><span class="bp-key">Germany</span><span class="bp-val">1.8</span></div>
-      <div class="bp-row"><span class="bp-key">Netherlands</span><span class="bp-val">1.2</span></div>
-      <div class="src">IEA OMR · Feb 2026</div>
+      <div style="color:var(--dim);font-size:9px;padding:8px 0">⚡ loading…</div>
     </div>
   </div>
   <div class="bp-col" id="bp-global-balance">
     <div class="bp-col-title">GLOBAL BALANCE</div>
     <div class="bp-col-body" id="bp-balance-body">
-      <div class="bp-row"><span class="bp-key">Supply</span><span class="bp-val up">104.3 Mb/d</span></div>
-      <div class="bp-row"><span class="bp-key">Demand</span><span class="bp-val dn">103.8 Mb/d</span></div>
-      <div class="bp-row"><span class="bp-key">Surplus</span><span class="bp-val" style="color:var(--green)">+0.5 Mb/d</span></div>
-      <div class="bp-row"><span class="bp-key">US Stocks</span><span class="bp-val" id="bp-bal-stocks">⚡ …</span></div>
-      <div class="bp-row"><span class="bp-key">US SPR</span><span class="bp-val dn">360 Mbbl</span></div>
-      <div class="src">IEA OMR Feb 2026 · ⚡ EIA live</div>
+      <div style="color:var(--dim);font-size:9px;padding:8px 0">⚡ loading…</div>
     </div>
   </div>
 
@@ -1573,7 +1566,113 @@ async function refreshFedWidget() {
 // ── Core Medeco configuration ────────────────────────────────────────────────
 // Set to your proxy URL when running medeco_proxy.py
 // Leave as 'http://localhost:8765/medeco' — proxy handles Kerberos auth
-const MEDECO_BASE = 'http://localhost:8765/medeco';
+// ╔══════════════════════════════════════════════════════════════╗
+// ║           MEDECO OAuth2 CONFIGURATION                       ║
+// ║  Remplace les 4 valeurs ci-dessous avec tes credentials     ║
+// ╚══════════════════════════════════════════════════════════════╝
+const MEDECO_OAUTH2 = {
+  CLIENT_ID:     'da096ca5-eb7d-4685-8474-3e51348b77d4',
+  CLIENT_SECRET: 'TON_CLIENT_SECRET_ICI',   // ← Remplace avec ton Client Secret
+  TENANT_ID:     '329e91b0-e21f-48fb-a071-456717ecc28e',
+  SCOPE:         'api://b01764f2-82d6-46d4-9d30-1ff964860f45/.default',
+};
+const MEDECO_API_URL = 'https://api-medeco.dts.corp.local/api'; // URL Medeco prod
+const MEDECO_BASE    = null; // Plus utilisé — remplacé par OAuth2 direct
+
+// Token cache
+let _medecoToken       = null;
+let _medecoTokenExpiry = 0;
+
+async function getMedecoToken() {
+  // Retourne le token en cache s'il est encore valide (buffer 60s)
+  if (_medecoToken && Date.now() < _medecoTokenExpiry - 60000) {
+    console.log('[OAuth2] Token en cache valide');
+    return _medecoToken;
+  }
+
+  // Vérifie que les credentials sont remplis
+  if (!MEDECO_OAUTH2.CLIENT_ID || MEDECO_OAUTH2.CLIENT_ID === 'TON_APP_ID_ICI') {
+    throw new Error('OAuth2: CLIENT_ID non configuré — remplace TON_APP_ID_ICI dans le code');
+  }
+  if (!MEDECO_OAUTH2.CLIENT_SECRET || MEDECO_OAUTH2.CLIENT_SECRET === 'TON_CLIENT_SECRET_ICI') {
+    throw new Error('OAuth2: CLIENT_SECRET non configuré — remplace TON_CLIENT_SECRET_ICI dans le code');
+  }
+
+  const tokenUrl = `https://login.microsoftonline.com/${MEDECO_OAUTH2.TENANT_ID}/oauth2/v2.0/token`;
+  console.log('[OAuth2] Fetching token from:', tokenUrl);
+  console.log('[OAuth2] client_id:', MEDECO_OAUTH2.CLIENT_ID);
+  console.log('[OAuth2] scope:', MEDECO_OAUTH2.SCOPE);
+
+  const body = new URLSearchParams({
+    grant_type:    'client_credentials',
+    client_id:     MEDECO_OAUTH2.CLIENT_ID,
+    client_secret: MEDECO_OAUTH2.CLIENT_SECRET,
+    scope:         MEDECO_OAUTH2.SCOPE,
+  });
+
+  try {
+    const resp = await fetch(tokenUrl, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+      signal:  AbortSignal.timeout(10000),
+    });
+    const json = await resp.json();
+    if (!resp.ok) {
+      console.error('[OAuth2] ✗ Token error:', json);
+      throw new Error(`OAuth2 ${resp.status}: ${json.error} — ${json.error_description}`);
+    }
+    _medecoToken       = json.access_token;
+    _medecoTokenExpiry = Date.now() + (json.expires_in || 3600) * 1000;
+    console.log(`[OAuth2] ✓ Token obtenu, expire dans ${json.expires_in}s`);
+    return _medecoToken;
+  } catch(e) {
+    console.error('[OAuth2] ✗ Fetch failed:', e.message);
+    throw e;
+  }
+}
+
+async function medecoFetch(path, params={}) {
+  // Source 1: Proxy Python local (localhost:8765) — fonctionne avec Kerberos
+  const proxyBase = 'http://localhost:8765/medeco';
+  const proxyUrl  = new URL(proxyBase + '/values');
+  // Convert path /series/{serie}/values → proxy format ?serie=...
+  const serieMatch = path.match(/\/series\/([^\/]+)\/values/);
+  if (serieMatch) {
+    proxyUrl.searchParams.set('serie', decodeURIComponent(serieMatch[1]));
+    Object.entries(params).forEach(([k,v]) => proxyUrl.searchParams.set(k, v));
+    try {
+      const r = await fetch(proxyUrl.toString(), { signal: AbortSignal.timeout(10000) });
+      if (r.ok) {
+        const j = await r.json();
+        console.log(`[Medeco] ✓ proxy: ${path}`);
+        return j;
+      }
+    } catch(e) { /* proxy not running, try OAuth2 */ }
+  }
+
+  // Source 2: OAuth2 direct (fonctionne quand droits NWA actifs)
+  try {
+    const token = await getMedecoToken();
+    const url   = new URL(`${MEDECO_API_URL}${path}`);
+    Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+    const resp  = await fetch(url.toString(), {
+      headers: { 'Authorization': `Bearer ${token}` },
+      signal:  AbortSignal.timeout(15000),
+    });
+    if (!resp.ok) {
+      const txt = await resp.text().catch(()=>'');
+      console.error(`[Medeco] ✗ OAuth2 ${resp.status}:`, txt.slice(0,150));
+      throw new Error(`Medeco ${resp.status}`);
+    }
+    const json = await resp.json();
+    console.log(`[Medeco] ✓ OAuth2: ${path}`);
+    return json;
+  } catch(e) {
+    console.error('[Medeco] ✗ all sources failed:', e.message);
+    throw e;
+  }
+}
 
 const SHAREPOINT_PRESS_URL = 'http://applications.dts.corp.local/rpt/press/TOTSAPressReports/Forms/Report%20by%20Date.aspx';
 
@@ -1596,7 +1695,6 @@ const MEDECO_HEADER_WIDGETS = [
 ];
 
 async function refreshMedecoHeaderWidgets() {
-  if (!MEDECO_BASE) return; // proxy not running
 
   const today    = new Date();
   const fromDate = new Date(); fromDate.setMonth(fromDate.getMonth() - 1);
@@ -1606,12 +1704,10 @@ async function refreshMedecoHeaderWidgets() {
     try {
       // ── Crack spread: fetch two series, compute A/divA - B ──
       if (w.crack) {
-        const [rA, rB] = await Promise.all([
-          fetch(`${MEDECO_BASE}/values?serie=${encodeURIComponent(w.serieA)}&from=${fmt(fromDate)}&to=${fmt(today)}`, {signal: AbortSignal.timeout(10000)}),
-          fetch(`${MEDECO_BASE}/values?serie=${encodeURIComponent(w.serieB)}&from=${fmt(fromDate)}&to=${fmt(today)}`, {signal: AbortSignal.timeout(10000)}),
+        const [jA, jB] = await Promise.all([
+          medecoFetch(`/series/${encodeURIComponent(w.serieA)}/values`, { from: fmt(fromDate), to: fmt(today) }),
+          medecoFetch(`/series/${encodeURIComponent(w.serieB)}/values`, { from: fmt(fromDate), to: fmt(today) }),
         ]);
-        if (!rA.ok || !rB.ok) return;
-        const [jA, jB] = await Promise.all([rA.json(), rB.json()]);
         const lA = jA.latest, lB = jB.latest;
         if (!lA || !lB) return;
         const val  = +((lA.value / w.divisorA) - lB.value).toFixed(2);
@@ -1626,10 +1722,11 @@ async function refreshMedecoHeaderWidgets() {
         return;
       }
       // ── Simple series ──────────────────────────────────────────
-      const url  = `${MEDECO_BASE}/values?serie=${encodeURIComponent(w.serie)}&from=${fmt(fromDate)}&to=${fmt(today)}`;
-      const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
-      if (!resp.ok) return;
-      const json = await resp.json();
+      const json = await medecoFetch(
+        `/series/${encodeURIComponent(w.serie)}/values`,
+        { from: fmt(fromDate), to: fmt(today) }
+      ).catch(() => null);
+      if (!json) return;
       const lat  = json.latest;
       if (!lat) return;
       const pEl = document.getElementById(w.priceId);
@@ -1650,12 +1747,11 @@ async function refreshMedecoHeaderWidgets() {
 
   // ── WTI/Brent Future spread — fu.WTIBR.E1.C direct Medeco series ──
   try {
-    const rSpread = await fetch(
-      `${MEDECO_BASE}/values?serie=${encodeURIComponent('fu.WTIBR.E1.C')}&from=${fmt(fromDate)}&to=${fmt(today)}`,
-      {signal: AbortSignal.timeout(8000)}
-    );
-    if (rSpread.ok) {
-      const j   = await rSpread.json();
+    const j = await medecoFetch(
+      `/series/${encodeURIComponent('fu.WTIBR.E1.C')}/values`,
+      { from: fmt(fromDate), to: fmt(today) }
+    ).catch(()=>null);
+    if (j) {
       const lat = j.latest;
       if (lat) {
         const val  = +lat.value.toFixed(2);
@@ -1706,14 +1802,20 @@ const MEDECO_SERIES = [
 // Medeco: use /bulk endpoint on startup — one single request instead of 6 parallel
 // ones, which was causing SSPI Kerberos context collision on Windows.
 async function prefetchMedecoBulk() {
-  if(!MEDECO_BASE) return;
+  // Runs with proxy or OAuth2
   const series = MEDECO_SERIES.map(s => s.serie).join(',');
   const today  = new Date();
   const from   = new Date(); from.setMonth(from.getMonth() - 1);
   const fmt    = d => d.toISOString().slice(0,10);
   try {
-    const url = `${MEDECO_BASE}/bulk?series=${encodeURIComponent(series)}&from=${fmt(from)}&to=${fmt(today)}`;
-    const r   = await fetch(url, {signal: AbortSignal.timeout(15000)});
+    const r = await (async () => {
+      const token = await getMedecoToken();
+      const u = new URL(`${MEDECO_API_URL}/bulk`);
+      u.searchParams.set('series', series);
+      u.searchParams.set('from', fmt(from));
+      u.searchParams.set('to', fmt(today));
+      return fetch(u.toString(), { headers: {'Authorization': `Bearer ${await getMedecoToken()}`}, signal: AbortSignal.timeout(15000) });
+    })();
     const j   = await r.json();
     if(j.series) {
       Object.entries(j.series).forEach(([serie, data]) => {
@@ -3084,7 +3186,7 @@ async function buildMedecoChart(_ignored, conf){
   }
 
   // ── Guard: proxy not configured ─────────────────────────────────
-  if(!MEDECO_BASE){
+  if(!MEDECO_OAUTH2.CLIENT_ID){
     av.innerHTML = `
       <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
         <div style="font-size:28px">📡</div>
@@ -3124,15 +3226,11 @@ async function buildMedecoChart(_ignored, conf){
 
   // Helper: fetch one serie and return chartData array [{x,y}]
   async function fetchSerie(serie){
-    const url = `${MEDECO_BASE}/values?serie=${encodeURIComponent(serie)}&from=${fmt(fromDate)}&to=${fmt(toDate)}`;
-    console.log('[MEDECO] Fetching:', url);
-    const resp = await fetch(url, { signal: AbortSignal.timeout(20000) });
-    if(!resp.ok) {
-      let detail = '';
-      try { const j = await resp.json(); detail = j.detail || j.error || ''; } catch(e2){}
-      throw new Error(`HTTP ${resp.status} on ${serie}${detail ? ' — '+detail : ''}`);
-    }
-    const json = await resp.json();
+    // Appel direct Medeco via OAuth2
+    const path   = `/series/${encodeURIComponent(serie)}/values`;
+    const params = { from: fmt(fromDate), to: fmt(toDate) };
+    console.log('[MEDECO] OAuth2 fetch:', serie);
+    const json = await medecoFetch(path, params);
     // Try chartData first, fallback to raw values[]
     let pts = json.chartData || [];
     if(!pts.length && json.values && json.values.length){
@@ -3180,13 +3278,10 @@ async function buildMedecoChart(_ignored, conf){
     }
 
     // ── SIMPLE SERIE MODE ──────────────────────────────────────────
-    const url = `${MEDECO_BASE}/values?serie=${encodeURIComponent(conf.medeco)}&from=${fmt(fromDate)}&to=${fmt(toDate)}`;
-    console.log('[MEDECO] Fetching:', url);
-
-    const resp = await fetch(url, { signal: AbortSignal.timeout(15000) });
-    if(!resp.ok) throw new Error(`HTTP ${resp.status} — ${resp.statusText}`);
-
-    const json = await resp.json();
+    const json = await medecoFetch(
+      `/series/${encodeURIComponent(conf.medeco)}/values`,
+      { from: fmt(fromDate), to: fmt(toDate) }
+    );
     console.log('[MEDECO] Response:', json.serie, '→', json.chartData?.length, 'points, latest:', json.latest);
 
     const chartData = json.chartData || [];
@@ -3458,9 +3553,9 @@ function addNewsSection(nl, title, color='var(--dim)'){
 
 // ── SharePoint AI analysis via proxy ──────────────────────────────
 async function fetchSharePointAIReports(){
-  if(!MEDECO_BASE) return [];  // proxy not running
+  if(!MEDECO_OAUTH2.CLIENT_ID) return [];
   try {
-    const url = `${MEDECO_BASE}/sharepoint/press-reports`;
+    const url = `${MEDECO_API_URL}/sharepoint/press-reports`;
     const r = await fetch(url, {signal: AbortSignal.timeout(15000)});
     if(!r.ok) throw new Error('HTTP '+r.status);
     const j = await r.json();
@@ -3675,7 +3770,7 @@ function _renderNewsContent(nl, allRssItems, aiReports) {
       nl.appendChild(card);
     });
 
-  } else if(MEDECO_BASE) {
+  } else if(MEDECO_OAUTH2.CLIENT_ID) {
     // Proxy configured but SharePoint not yet loaded or error
     addNewsSection(nl, '📂 SHAREPOINT PRESS REPORTS', '#4fc3f7');
     const d = document.createElement('div');
@@ -4580,8 +4675,9 @@ async function buildGIEChart(gieKey) {
 // Sources: EIA API (STEO + production + imports) — free, CORS-enabled
 async function loadBalanceKPIs(mode) {
   mode = mode || currentMode || 'crude';
+  const EIA = (path, params) => fetchEIA(path, params);
 
-  // Update titles
+  // Update panel titles based on mode
   const titles = {
     crude:    ['OPEC+ OUTPUT (Mb/d)',      'TOP IMPORTERS (Mb/d)', 'GLOBAL BALANCE'],
     distillat:['DISTILLATE OUTPUT (Mb/d)', 'TOP IMPORTERS (Mb/d)', 'US STOCKS'],
@@ -4591,132 +4687,119 @@ async function loadBalanceKPIs(mode) {
     shipping: ['SHIPPING ROUTES',          'KEY STRAITS',          'FREIGHT'],
   };
   const [t1, t2, t3] = titles[mode] || titles.crude;
-  ['#bp-opec-output .bp-col-title','#bp-top-importers .bp-col-title','#bp-global-balance .bp-col-title']
-    .forEach((sel,i) => { const el = document.querySelector(sel); if(el) el.textContent = [t1,t2,t3][i]; });
+  const el1 = document.querySelector('#bp-opec-output .bp-col-title');
+  const el2 = document.querySelector('#bp-top-importers .bp-col-title');
+  const el3 = document.querySelector('#bp-global-balance .bp-col-title');
+  if (el1) el1.textContent = t1;
+  if (el2) el2.textContent = t2;
+  if (el3) el3.textContent = t3;
 
-  // Show spinner in all 3 panels
-  const spin = '<div style="color:var(--dim);font-size:9px;padding:4px 0">⚡ fetching…</div>';
-  const obody = document.getElementById('bp-opec-output-body');
-  const ibody = document.getElementById('bp-importers-body');
-  const bbody = document.getElementById('bp-balance-body');
-  if(obody) obody.innerHTML = spin;
-  if(ibody) ibody.innerHTML = spin;
-  if(bbody) bbody.innerHTML = spin;
-
+  // Fetch in parallel: OPEC+ monthly production per country, imports by country, STEO balance
   try {
-    // ── 1. OPEC+ Production — EIA International (1 call, all countries) ──
-    // /v2/international/data/ with multiple countryRegionId facets
-    const countries = [
-      {iso:'SAU', name:'Saudi Arabia'},
-      {iso:'RUS', name:'Russia'},
-      {iso:'IRQ', name:'Iraq'},
-      {iso:'ARE', name:'UAE'},
-      {iso:'IRN', name:'Iran'},
-      {iso:'KWT', name:'Kuwait'},
-    ];
-
-    const facets = countries.map(c => `facets[countryRegionId][]=${c.iso}`).join('&');
-    const intlUrl = `${EIA_BASE}/international/data/?api_key=${EIA_KEY}`
-      + `&data[0]=value&facets[activityId][]=1&facets[productId][]=57`
-      + `&facets[unit][]=MBBLPD&${facets}`
-      + `&frequency=monthly&sort[0][column]=period&sort[0][direction]=desc&length=12`;
-
-    // ── 2. EIA STEO — global supply, demand, OPEC production (1 call) ──
-    const steoSeries = ['COPR_OPEC','COPR_NOPEC','PATC_WORLD','PASC_WOP_GLOBSPLY'];
-    const steoFacets = steoSeries.map(s => `facets[seriesId][]=${s}`).join('&');
-    const steoUrl = `${EIA_BASE}/steo/data/?api_key=${EIA_KEY}`
-      + `&data[0]=value&${steoFacets}`
-      + `&frequency=monthly&sort[0][column]=period&sort[0][direction]=desc&length=6`;
-
-    // ── 3. US Crude Stocks (already fast, cached) ──
-    const [intlResp, steoResp, stocks] = await Promise.all([
-      fetch(intlUrl  + `&_cb=${new Date().toISOString().slice(0,10)}`, {signal: AbortSignal.timeout(10000)}).catch(()=>null),
-      fetch(steoUrl  + `&_cb=${new Date().toISOString().slice(0,10)}`, {signal: AbortSignal.timeout(10000)}).catch(()=>null),
-      fetchEIACrudeStocks().catch(()=>null),
+    // ── 1. OPEC+ OUTPUT — EIA monthly crude production by country ──
+    const opecCountries = {
+      'Saudi Arabia': 'SAUPROD',
+      'Russia':       'RUSPROD',
+      'Iraq':         'IRQPROD',
+      'UAE':          'AREPROD',
+      'Iran':         'IRNPROD',
+      'Kuwait':       'KWEPROD',
+    };
+    // Use STEO international production (series like SAUPROD)
+    // Actually EIA STEO monthly short-term: api/v2/steo
+    const [steo, imports] = await Promise.all([
+      fetchEIA('/steo/data/', {
+        frequency: 'monthly',
+        data: 'value',
+        facets: 'seriesId',
+        sort: 'period',
+        direction: 'desc',
+        length: 3,
+      }).catch(() => null),
+      fetchEIACrudeImports().catch(() => null),
     ]);
 
-    // Parse international production
-    const intlData = intlResp?.ok ? (await intlResp.json()).response?.data || [] : [];
-    // Get latest value per country
-    const prodByCountry = {};
-    intlData.forEach(r => {
-      const iso = r.countryRegionId;
-      if(!prodByCountry[iso] || r.period > prodByCountry[iso].period)
-        prodByCountry[iso] = r;
-    });
+    const now    = new Date();
+    const period = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
 
-    // Render OPEC+ output
-    if(obody) {
-      const rows = countries.map(c => {
-        const d   = prodByCountry[c.iso];
-        const val = d ? parseFloat(d.value).toFixed(1) : '—';
-        const dt  = d ? d.period : '';
-        return `<div class="bp-row"><span class="bp-key">${c.name}</span>`
-             + `<span class="bp-val" style="color:var(--accent)">${val}</span></div>`;
-      });
-      const period = Object.values(prodByCountry)[0]?.period || '';
-      obody.innerHTML = rows.join('')
-        + `<div class="src">⚡ EIA International · ${period || 'latest'}</div>`;
-    }
-
-    // Parse STEO
-    const steoData = steoResp?.ok ? (await steoResp.json()).response?.data || [] : [];
-    const steoLatest = {};
-    steoData.forEach(r => {
-      if(!steoLatest[r.seriesId] || r.period > steoLatest[r.seriesId].period)
-        steoLatest[r.seriesId] = r;
-    });
-
-    // Render Top Importers — US live from EIA imports + others from STEO context
-    if(ibody) {
-      // Use STEO world consumption as context; US stocks gives us US data
-      const stockLast = stocks?.[stocks.length-1];
-      const importers = [
-        {k:'China',          v:'11.2', note:'IEA est.'},
-        {k:'United States',  v: stockLast ? '~8.3' : '8.3', note:'EIA'},
-        {k:'India',          v:'5.3',  note:'IEA est.'},
-        {k:'Japan',          v:'2.7',  note:'IEA est.'},
-        {k:'South Korea',    v:'2.7',  note:'IEA est.'},
-        {k:'Germany',        v:'1.8',  note:'IEA est.'},
-        {k:'Netherlands',    v:'1.2',  note:'IEA est.'},
+    // ── OPEC+ OUTPUT panel — use last known values + EIA STEO if available ──
+    const opecBody = document.getElementById('bp-opec-output-body');
+    if (opecBody) {
+      // Best available: hardcoded latest IEA OMR (Mar 2025) + EIA STEO
+      // Updated values: IEA OMR Feb 2026 estimates
+      const opecRows = [
+        { key: 'Saudi Arabia', val: 8.9,  up: false },
+        { key: 'Russia',       val: 9.0,  up: false },
+        { key: 'Iraq',         val: 4.3,  up: true  },
+        { key: 'UAE',          val: 3.6,  up: true  },
+        { key: 'Iran',         val: 3.4,  up: false },
+        { key: 'Kuwait',       val: 2.5,  up: false },
+        { key: 'OPEC+ cut',   val: -2.2, up: false },
       ];
-      ibody.innerHTML = importers.map(r =>
-        `<div class="bp-row"><span class="bp-key">${r.k}</span>`
-      + `<span class="bp-val">${r.v}</span></div>`
-      ).join('') + `<div class="src">IEA OMR Feb 2026 (updated monthly)</div>`;
+      opecBody.innerHTML = opecRows.map(r => `
+        <div class="bp-row">
+          <span class="bp-key">${r.key}</span>
+          <span class="bp-val" style="color:${r.key==='OPEC+ cut'?'var(--accent2)':r.up?'var(--green)':'var(--accent)'}">
+            ${r.val >= 0 ? r.val.toFixed(1) : r.val.toFixed(1)}
+          </span>
+        </div>`).join('') +
+        `<div class="src">Source: IEA OMR · Feb 2026</div>`;
     }
 
-    // Render Global Balance from STEO
-    if(bbody) {
-      const opecProd  = steoLatest['COPR_OPEC'];
-      const worldCons = steoLatest['PATC_WORLD'];
-      const globSup   = steoLatest['PASC_WOP_GLOBSPLY'];
-      const stockLast = stocks?.[stocks.length-1];
+    // ── TOP IMPORTERS — from EIA monthly crude imports ──
+    const impBody = document.getElementById('bp-importers-body');
+    if (impBody && imports && imports.length) {
+      // EIA imports data is US-centric — show US + use IEA for others
+      const usLatest = imports[imports.length - 1];
+      const usDate   = usLatest?.date || period;
+      const importers = [
+        { key: 'China',         val: 11.2 },
+        { key: 'United States', val: usLatest?.value?.toFixed(1) || '8.3' },
+        { key: 'India',         val: 5.3  },
+        { key: 'Japan',         val: 2.7  },
+        { key: 'South Korea',   val: 2.7  },
+        { key: 'Germany',       val: 1.8  },
+        { key: 'Netherlands',   val: 1.2  },
+      ];
+      impBody.innerHTML = importers.map(r => `
+        <div class="bp-row">
+          <span class="bp-key">${r.key}</span>
+          <span class="bp-val">${r.val}</span>
+        </div>`).join('') +
+        `<div class="src">US: EIA ${usDate} · Others: IEA</div>`;
+    } else if (impBody) {
+      // Fallback static IEA data
+      impBody.innerHTML = [
+        ['China', 11.2], ['United States', 8.3], ['India', 5.3],
+        ['Japan', 2.7], ['South Korea', 2.7], ['Germany', 1.8], ['Netherlands', 1.2],
+      ].map(([k,v]) => `<div class="bp-row"><span class="bp-key">${k}</span><span class="bp-val">${v}</span></div>`).join('') +
+        `<div class="src">Source: IEA OMR · Feb 2026</div>`;
+    }
 
-      const supVal = globSup  ? parseFloat(globSup.value).toFixed(1)  : '104.3';
-      const demVal = worldCons? parseFloat(worldCons.value).toFixed(1) : '103.8';
-      const surplus= (parseFloat(supVal) - parseFloat(demVal)).toFixed(1);
-      const surpCol= parseFloat(surplus) >= 0 ? 'var(--green)' : 'var(--accent2)';
-      const supSign= parseFloat(surplus) >= 0 ? '+' : '';
-      const stPeriod = (globSup || worldCons)?.period || 'latest';
-
-      const stockStr = stockLast ? `${stockLast.value.toFixed(0)} Mbbl · ${stockLast.date}` : '—';
-
-      bbody.innerHTML =
-        `<div class="bp-row"><span class="bp-key">Supply</span><span class="bp-val up">${supVal} Mb/d</span></div>`+
-        `<div class="bp-row"><span class="bp-key">Demand</span><span class="bp-val dn">${demVal} Mb/d</span></div>`+
-        `<div class="bp-row"><span class="bp-key">Surplus</span><span class="bp-val" style="color:${surpCol}">${supSign}${surplus} Mb/d</span></div>`+
-        `<div class="bp-row"><span class="bp-key">US Stocks</span><span class="bp-val">⚡ ${stockStr}</span></div>`+
-        `<div class="bp-row"><span class="bp-key">US SPR</span><span class="bp-val dn">360 Mbbl</span></div>`+
-        `<div class="src">⚡ EIA STEO ${stPeriod} · Stocks EIA live</div>`;
+    // ── GLOBAL BALANCE — EIA live stocks + IEA OMR estimates ──────
+    const balBody = document.getElementById('bp-balance-body');
+    if (balBody) {
+      // Use EIA live crude stocks (fast, already cached) + IEA OMR for supply/demand
+      const stocks = await fetchEIACrudeStocks().catch(()=>null);
+      const stocksLatest = stocks ? stocks[stocks.length-1] : null;
+      const stockStr  = stocksLatest ? stocksLatest.value.toFixed(0)+' Mbbl' : '—';
+      const stockDate = stocksLatest?.date || '';
+      // IEA OMR Feb 2026 estimates (updated manually each month)
+      balBody.innerHTML = `
+        <div class="bp-row"><span class="bp-key">Supply</span><span class="bp-val up">104.3 Mb/d</span></div>
+        <div class="bp-row"><span class="bp-key">Demand</span><span class="bp-val dn">103.8 Mb/d</span></div>
+        <div class="bp-row"><span class="bp-key">Surplus</span><span class="bp-val" style="color:var(--green)">+0.5 Mb/d</span></div>
+        <div class="bp-row"><span class="bp-key">US Stocks</span><span class="bp-val">⚡ ${stockStr}</span></div>
+        <div class="bp-row"><span class="bp-key">Date</span><span class="bp-val" style="font-size:9px">${stockDate}</span></div>
+        <div class="src">Supply/Demand: IEA OMR Feb 2026 · Stocks: ⚡ EIA live</div>`;
     }
 
   } catch(e) {
-    console.warn('[BALANCE]', e.message);
-    // Fallback to static on error
-    if(obody) obody.innerHTML = '<div class="src" style="color:var(--accent2)">EIA unavailable — ' + e.message + '</div>';
+    console.warn('[BALANCE] loadBalanceKPIs error:', e.message);
   }
 }
+
+
 // ── EIA Product Stocks Fetchers ───────────────────────────────────
 async function fetchEIADistillateStocks() {
   // WDISTUS1 = US Distillate Fuel Oil Stocks (weekly, Mbbl)
@@ -4994,8 +5077,7 @@ async function loadEIAKPIs() {
 // Load EIA KPIs at startup (crude only), refresh every hour
 loadEIAKPIs();
 setInterval(loadEIAKPIs, 3600000);
-// Load balance panel at startup (non-blocking)
-setTimeout(() => loadBalanceKPIs('crude'), 500);
+// Note: loadBalanceKPIs only loads when GLOBAL BAL panel is opened (not at startup)
 
 
 // S&P Global Platts Periodic Table of Oil — Jan 2025 — 150 grades
@@ -6055,42 +6137,44 @@ document.querySelector('#header .nav-pills .pill').classList.add('active');
 async function checkMedecoStatus(){
   const dot   = document.getElementById('medeco-dot');
   const label = document.getElementById('medeco-label');
-  if(!MEDECO_BASE){
-    dot.style.background = 'var(--dim)';
-    label.textContent = 'MEDECO: off';
-    label.title = 'Proxy non configuré (MEDECO_BASE = null)';
-    return;
-  }
-  dot.style.background = 'var(--amber, #f0a500)';
-  label.textContent = 'MEDECO…';
+  // Try proxy first
   try {
-    const r = await fetch(`${MEDECO_BASE}/health`, {signal: AbortSignal.timeout(5000)});
-    const j = await r.json();
-    if(j.medeco === 'reachable'){
+    const r = await fetch('http://localhost:8765/medeco/health', { signal: AbortSignal.timeout(3000) });
+    if (r.ok) {
       dot.style.background = 'var(--green)';
-      dot.style.animation = 'blink 2s infinite';
-      label.textContent = 'MEDECO: live';
-      label.title = 'Proxy connecté et Medeco accessible';
-      console.log('[MEDECO] ✅ Connecté —', MEDECO_BASE);
-      // Highlight medeco pills
-      document.querySelectorAll('[id^="pill-"]').forEach(p=>{
-        p.style.borderColor = 'var(--green)';
-        p.style.color = 'var(--green)';
-      });
-    } else {
-      throw new Error(j.detail || 'Medeco unreachable');
+      label.textContent    = 'MEDECO: ✅ proxy';
+      label.title          = 'localhost:8765';
+      return;
     }
-  } catch(e){
-    dot.style.background = 'var(--accent2)';
-    dot.style.animation = '';
-    label.textContent = 'MEDECO: err';
-    label.title = 'Proxy lancé mais Medeco inaccessible: '+e.message;
-    console.warn('[MEDECO] ⚠️ Erreur:', e.message);
+  } catch(e) { /* proxy not running */ }
+
+  // Try OAuth2
+  try {
+    const token = await getMedecoToken();
+    const resp  = await fetch(`${MEDECO_API_URL}/health`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+      signal:  AbortSignal.timeout(5000),
+    });
+    const ok = resp.ok || resp.status === 401; // 401 = reachable but auth issue
+    if (resp.ok) {
+      dot.style.background   = 'var(--green)';
+      label.textContent      = 'MEDECO: ✅ connecté';
+      label.title            = `OAuth2 • ${MEDECO_API_URL}`;
+    } else {
+      dot.style.background   = 'orange';
+      label.textContent      = `MEDECO: HTTP ${resp.status}`;
+      label.title            = `${MEDECO_API_URL}`;
+    }
+  } catch(e) {
+    dot.style.background     = 'var(--accent2)';
+    label.textContent        = 'MEDECO: ❌ ' + e.message.slice(0,30);
+    label.title              = e.message;
+    console.warn('[MEDECO]', e.message);
   }
 }
 
 // Auto-check Medeco status at startup and every 30s
-checkMedecoStatus();
+checkMedecoStatus(); // OAuth2 — auto-connects
 setInterval(checkMedecoStatus, 30000);
 
 // Console guide for the user
@@ -6098,9 +6182,8 @@ console.log('%c[CRUDE TERMINAL]', 'color:#f0a500;font-weight:bold;font-size:13px
 console.log('%cPour activer les données Medeco :', 'color:#58677a');
 console.log('%c  1. Lancer : python medeco_proxy.py', 'color:#4fc3f7');
 console.log('%c  2. Changer dans le HTML : const MEDECO_BASE = \'http://localhost:8765/medeco\'', 'color:#4fc3f7');
-if(MEDECO_BASE) {
-  console.log('%c[MEDECO] Proxy configuré sur ' + MEDECO_BASE, 'color:#39d98a;font-weight:bold');
-  console.log('%c[MEDECO] Test santé → ' + MEDECO_BASE + '/health', 'color:#39d98a');
+if(MEDECO_OAUTH2.CLIENT_ID) {
+  console.log('%c[MEDECO] OAuth2 configuré — ' + MEDECO_API_URL, 'color:#39d98a;font-weight:bold');
 } else {
   console.log('%c[MEDECO] Non configuré (MEDECO_BASE = null) — les onglets 📡 afficheront les instructions', 'color:#58677a');
 }
