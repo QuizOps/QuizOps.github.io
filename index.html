@@ -793,10 +793,16 @@ body {
       <div class="yfw-chg"   id="mw-hsfo-chg">$/t</div>
     </div>
 
-    <div class="yf-widget" id="mw-dist"  onclick="showChart('medeco-distillate')" title="Distillate NWE — Medeco live · pr.KJ.CCNWEA@P.M" style="border-left:1px solid #2a3a4a">
-      <div class="yfw-name">DISTILLATE</div>
+    <div class="yf-widget" id="mw-dist"  onclick="showChart('medeco-distillate')" title="Kero NWE — Medeco live · pr.KJ.CCNWEA@P.M" style="border-left:1px solid #2a3a4a">
+      <div class="yfw-name">KERO NWE</div>
       <div class="yfw-price" id="mw-dist-price">—</div>
       <div class="yfw-chg"   id="mw-dist-chg">$/t</div>
+    </div>
+
+    <div class="yf-widget" id="mw-gasoil" onclick="showChart('medeco-gasoil')" title="Gasoil NWE ULSD — Medeco live · pr.GULSD.BFROTT@P@10.M" style="border-left:1px solid #2a3a4a">
+      <div class="yfw-name">GASOIL</div>
+      <div class="yfw-price" id="mw-gasoil-price">—</div>
+      <div class="yfw-chg"   id="mw-gasoil-chg">$/t</div>
     </div>
 
     <div class="yf-widget" id="mw-dubai" onclick="showChart('medeco-dubai')"      title="Dubai Crude — Medeco live · cr.DBAI.1LI@SP@P.M" style="border-left:1px solid #2a3a4a">
@@ -817,8 +823,8 @@ body {
       <div class="yfw-chg"   id="mw-bwspread-chg">$/bbl</div>
     </div>
 
-    <div class="yf-widget" id="mw-distcrk"  onclick="showChart('medeco-diesel-crack')"  title="Distillate Crack vs Brent — Medeco" style="border-left:1px solid #2a3a4a">
-      <div class="yfw-name" style="color:#38bdf8">DIST CRK</div>
+    <div class="yf-widget" id="mw-distcrk"  onclick="showChart('medeco-diesel-crack')"  title="Gasoil Crack vs Brent — Medeco · pr.GULSD.BFROTT@P@10.M" style="border-left:1px solid #2a3a4a">
+      <div class="yfw-name" style="color:#38bdf8">GO CRK</div>
       <div class="yfw-price" id="mw-distcrk-price">—</div>
       <div class="yfw-chg"   id="mw-distcrk-chg">$/bbl</div>
     </div>
@@ -967,8 +973,9 @@ body {
 
     <!-- ── DISTILLAT pills ── -->
     <span id="medeco-dist-pills" style="display:none">
-      <button class="pill medeco-pill" onclick="showChart('medeco-diesel-crack')"  style="border-color:rgba(34,211,238,.25);color:var(--dim)">DIESEL CRACK</button>
-      <button class="pill medeco-pill" onclick="showChart('medeco-distillate')"    style="border-color:rgba(34,211,238,.25);color:var(--dim)">DISTILLATE</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-diesel-crack')"  style="border-color:rgba(56,189,248,.25);color:var(--dim)">GASOIL CRACK</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-distillate')"    style="border-color:rgba(34,211,238,.25);color:var(--dim)">KERO NWE</button>
+      <button class="pill medeco-pill" onclick="showChart('medeco-gasoil')"        style="border-color:rgba(56,189,248,.25);color:var(--dim)">GASOIL NWE</button>
       <button class="pill medeco-pill" onclick="showChart('distillate-stocks')"    style="border-color:rgba(79,195,247,.25);color:#4fc3f7">⚡ US STOCKS</button>
       <button class="pill medeco-pill" onclick="showChart('jet-stocks')"           style="border-color:rgba(79,195,247,.25);color:#4fc3f7">⚡ US JET</button>
     </span>
@@ -1686,11 +1693,12 @@ const MEDECO_HEADER_WIDGETS = [
   { serie: 'pr.GO01.CCNWEA@P.M',       label: 'VGO',        unit: '$/t',   priceId: 'mw-vgo-price',      chgId: 'mw-vgo-chg'      },
   { serie: 'pr.FO05.PUMFD00@P.M',      label: 'VLSFO',      unit: '$/t',   priceId: 'mw-vlsfo-price',    chgId: 'mw-vlsfo-chg'    },
   { serie: 'pr.FO35.BFROTT@P.M',       label: 'HSFO',       unit: '$/t',   priceId: 'mw-hsfo-price',     chgId: 'mw-hsfo-chg'     },
-  { serie: 'pr.KJ.CCNWEA@P.M',         label: 'Distillate', unit: '$/t',   priceId: 'mw-dist-price',     chgId: 'mw-dist-chg'     },
+  { serie: 'pr.KJ.CCNWEA@P.M',         label: 'Kero',       unit: '$/t',   priceId: 'mw-dist-price',     chgId: 'mw-dist-chg'     },
+  { serie: 'pr.GULSD.BFROTT@P@10.M',   label: 'Gasoil',     unit: '$/t',   priceId: 'mw-gasoil-price',   chgId: 'mw-gasoil-chg'   },
   { serie: 'cr.DBAI.1LI@SP@P.M',       label: 'Dubai',      unit: '$/bbl', priceId: 'mw-dubai-price',    chgId: 'mw-dubai-chg'    },
   { serie: 'cr.BRED.DTD@DUB@SP@P.M',   label: 'B/D Spread', unit: '$/bbl', priceId: 'mw-bdspread-price', chgId: 'mw-bdspread-chg' },
   // Crack spreads — computed from two series (serieA/divisorA - serieB)
-  { crack:true, serieA:'pr.KJ.CCNWEA@P.M',    divisorA:7.46, serieB:'cr.BRED.DTD@SP@P.M', label:'DIST CRK',   unit:'$/bbl', priceId:'mw-distcrk-price',  chgId:'mw-distcrk-chg'  },
+  { crack:true, serieA:'pr.GULSD.BFROTT@P@10.M', divisorA:7.45, serieB:'cr.BRED.DTD@SP@P.M', label:'DIST CRK',   unit:'$/bbl', priceId:'mw-distcrk-price',  chgId:'mw-distcrk-chg'  },
   { crack:true, serieA:'pr.NA.CCNWEA@P.H',     divisorA:8.9,  serieB:'cr.BRED.DTD@SP@P.M', label:'NAPH CRK',   unit:'$/bbl', priceId:'mw-naphcrk-price',  chgId:'mw-naphcrk-chg'  },
   { crack:true, serieA:'pr.FO05.PUMFD00@P.M',  divisorA:6.35, serieB:'cr.BRED.DTD@SP@P.M', label:'VLSFO CRK',  unit:'$/bbl', priceId:'mw-vlsfocrk-price', chgId:'mw-vlsfocrk-chg' },
   { crack:true, serieA:'pr.FO35.BFROTT@P.M',   divisorA:6.35, serieB:'cr.BRED.DTD@SP@P.M', label:'HSFO CRK',   unit:'$/bbl', priceId:'mw-hsfocrk-price',  chgId:'mw-hsfocrk-chg'  },
@@ -1789,7 +1797,8 @@ const MEDECO_SERIES = [
   {serie:"cr.SAM.SP@BGR.M",          label:"Sahara Blend",  unit:"$/bbl"},
   {serie:"pr.GULSD.BFROTT@P@10.M",   label:"Diesel",        unit:"$/mt"},
   {serie:"pr.NA.CCNWEA@P.H",         label:"Naphtha",       unit:"$/mt"},
-  {serie:"pr.KJ.CCNWEA@P.M",         label:"Distillate",    unit:"$/mt"},
+  {serie:"pr.KJ.CCNWEA@P.M",         label:"Kero NWE",      unit:"$/mt"},
+  {serie:"pr.GULSD.BFROTT@P@10.M",    label:"Gasoil NWE",    unit:"$/mt"},
   {serie:"pr.GO01.CCNWEA@P.M",       label:"VGO",           unit:"$/mt"},
   {serie:"pr.FO05.PUMFD00@P.M",      label:"VLSFO",         unit:"$/mt"},
   {serie:"pr.FO35.BFROTT@P.M",       label:"HSFO",          unit:"$/mt"},
@@ -2872,16 +2881,20 @@ const CHART_CONFIGS = {
 
   // ── DISTILLAT ─────────────────────────────────────────────────
   'medeco-diesel-crack': {
-    title:'DISTILLATE CRACK vs BRENT ($/bbl)',
-    meta:'pr.KJ.CCNWEA@P.M / 7.46  −  cr.BRED.DTD@SP@P.M',
-    medecoLabel:'Distillate Crack', medecoColor:'#38bdf8', medecoUnit:'$/bbl',
+    title:'GASOIL CRACK vs BRENT ($/bbl)',
+    meta:'pr.GULSD.BFROTT@P@10.M / 7.45  −  cr.BRED.DTD@SP@P.M',
+    medecoLabel:'Gasoil Crack', medecoColor:'#38bdf8', medecoUnit:'$/bbl',
     crack: true,
-    medecoA:'pr.KJ.CCNWEA@P.M', divisorA: 7.46,
+    medecoA:'pr.GULSD.BFROTT@P@10.M', divisorA: 7.45,
     medecoB:'cr.BRED.DTD@SP@P.M', divisorB: 1,
   },
   'medeco-distillate': {
-    title:'DISTILLATE NWE ($/t)', meta:'Source: Medeco · pr.KJ.CCNWEA@P.M',
-    medeco:'pr.KJ.CCNWEA@P.M', medecoLabel:'Distillate', medecoColor:'#4ade80', medecoUnit:'$/t'
+    title:'KERO NWE ($/t)', meta:'Source: Medeco · pr.KJ.CCNWEA@P.M',
+    medeco:'pr.KJ.CCNWEA@P.M', medecoLabel:'Kero NWE', medecoColor:'#4ade80', medecoUnit:'$/t'
+  },
+  'medeco-gasoil': {
+    title:'GASOIL NWE ($/t)', meta:'Source: Medeco · pr.GULSD.BFROTT@P@10.M',
+    medeco:'pr.GULSD.BFROTT@P@10.M', medecoLabel:'Gasoil NWE', medecoColor:'#38bdf8', medecoUnit:'$/t'
   },
 
   // ── GASOLINE ──────────────────────────────────────────────────
